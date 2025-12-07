@@ -373,56 +373,58 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-              <button
-                onClick={() => setIsEditingReflection(!isEditingReflection)}
-                className={cn(
-                  "p-1.5 rounded-lg transition-colors",
-                  (task.reflection || isEditingReflection) 
-                    ? "text-indigo-500 bg-indigo-50" 
-                    : "text-slate-300 hover:text-indigo-500 hover:bg-indigo-50"
-                )}
-              >
-                <MessageSquare size={16} />
-              </button>
-
-              {!isCompleted ? (
-                <>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={handleSplit}
-                    className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                    title="Split into smaller steps"
-                  >
-                    <Hammer size={16} />
-                  </motion.button>
-                  <button
-                    onClick={() => { playFreezeSound(); freezeTask(task.id); }}
-                    className="p-1.5 text-slate-300 hover:text-cyan-500 hover:bg-cyan-50 rounded-lg transition-colors"
-                    title="Freeze for later"
-                  >
-                    <Snowflake size={16} />
-                  </button>
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                  <div className="hidden md:flex p-1.5 text-slate-300 cursor-grab active:cursor-grabbing">
-                    <Grab size={16} />
-                  </div>
-                </>
-              ) : (
+            {!isEditingReflection && (
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                 <button
-                  onClick={() => setShowNextInput(true)}
-                  className="p-1.5 text-indigo-400 hover:text-indigo-600 bg-indigo-50 rounded-lg transition-colors"
-                  title="Continue chain"
+                  onClick={() => setIsEditingReflection(!isEditingReflection)}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    (task.reflection || isEditingReflection) 
+                      ? "text-indigo-500 bg-indigo-50" 
+                      : "text-slate-300 hover:text-indigo-500 hover:bg-indigo-50"
+                  )}
                 >
-                  <CornerDownRight size={16} />
+                  <MessageSquare size={16} />
                 </button>
-              )}
-            </div>
+
+                {!isCompleted ? (
+                  <>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={handleSplit}
+                      className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
+                      title="Split into smaller steps"
+                    >
+                      <Hammer size={16} />
+                    </motion.button>
+                    <button
+                      onClick={() => { playFreezeSound(); freezeTask(task.id); }}
+                      className="p-1.5 text-slate-300 hover:text-cyan-500 hover:bg-cyan-50 rounded-lg transition-colors"
+                      title="Freeze for later"
+                    >
+                      <Snowflake size={16} />
+                    </button>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <div className="hidden md:flex p-1.5 text-slate-300 cursor-grab active:cursor-grabbing">
+                      <Grab size={16} />
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setShowNextInput(true)}
+                    className="p-1.5 text-indigo-400 hover:text-indigo-600 bg-indigo-50 rounded-lg transition-colors"
+                    title="Continue chain"
+                  >
+                    <CornerDownRight size={16} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Next Step Input Popup */}

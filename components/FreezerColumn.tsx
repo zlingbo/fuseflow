@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Snowflake, Wind } from 'lucide-react';
+import { Wind } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 
 export const FreezerColumn: React.FC = () => {
@@ -11,7 +11,7 @@ export const FreezerColumn: React.FC = () => {
     <div className="h-full bg-slate-50 flex flex-col">
       <div className="p-6 bg-slate-50">
         <h2 className="text-cyan-600 font-bold uppercase tracking-wider text-xs flex items-center gap-2">
-          <Snowflake size={14} />
+          <Wind size={14} />
           THE FREEZER
         </h2>
         <p className="text-slate-400 text-xs mt-1">Drag items here to cool down</p>

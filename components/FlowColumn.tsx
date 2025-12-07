@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Zap } from 'lucide-react';
+import { Plus, Zap, SendHorizontal } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { SparkCard } from './SparkCard';
 import { SparkNode } from '../types';
@@ -60,8 +60,10 @@ const TaskChain: React.FC<{ task: SparkNode; allTasks: SparkNode[]; depth?: numb
 };
 
 export const FlowColumn: React.FC = () => {
-  const { tasks, addTask, activePopoverId } = useSparkStore();
+  const { tasks, addTask, activePopoverId, isMobileInputOpen, setMobileInputOpen } = useSparkStore();
   const [inputValue, setInputValue] = useState('');
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const rootTasks = tasks
     .filter(t => t.status !== 'frozen')
@@ -74,20 +76,32 @@ export const FlowColumn: React.FC = () => {
       const aActive = isChainActive(a.id, tasks);
       const bActive = isChainActive(b.id, tasks);
 
-      if (aActive && !bActive) return -1;
-      if (!aActive && bActive) return 1;
+      // 1. Inactive/Completed chains go to TOP (return -1)
+      // 2. Active chains go to BOTTOM (return 1)
+      if (aActive && !bActive) return 1;
+      if (!aActive && bActive) return -1;
 
       const aTime = a.completedAt ?? a.createdAt;
       const bTime = b.completedAt ?? b.createdAt;
 
-      return bTime - aTime;
+      // 3. Within groups, sort by Time ASC (Oldest -> Newest)
+      // This creates a timeline effect where the newest active task is at the very bottom
+      return aTime - bTime;
     });
+
+  // Auto-scroll to bottom when tasks change
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [tasks.length, rootTasks.length]);
 
   const handleMainSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
       addTask(inputValue, null);
       setInputValue('');
+      setMobileInputOpen(false); // Close mobile input on submit
     }
   };
 
@@ -99,15 +113,27 @@ export const FlowColumn: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="p-6 bg-slate-50 z-40 sticky top-0">
+      <div className="p-6 bg-slate-50 z-40 sticky top-0 border-transparent">
          <h2 className="text-indigo-600 font-bold uppercase tracking-wider text-xs flex items-center gap-2">
            <Zap size={14} />
            THE FLOW
          </h2>
       </div>
 
-      {/* Input Area */}
-      <div className="px-6 pb-2 z-30 bg-slate-50">
+      {/* Task Stream */}
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 relative z-10 scroll-smooth pb-24 md:pb-4">
+        <AnimatePresence mode='popLayout'>
+          {rootTasks.map((task) => (
+             <TaskChain key={task.id} task={task} allTasks={tasks} />
+          ))}
+        </AnimatePresence>
+        
+        {/* Invisible element to scroll to */}
+        <div ref={bottomRef} className="h-4" /> 
+      </div>
+
+      {/* Desktop Input Area (Hidden on Mobile) */}
+      <div className="hidden md:block px-6 pt-2 pb-6 z-30 bg-slate-50 border-t border-transparent">
         <form onSubmit={handleMainSubmit}>
           <input
             type="text"
@@ -119,29 +145,65 @@ export const FlowColumn: React.FC = () => {
         </form>
       </div>
 
-      {/* Task Stream */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 relative z-10">
-        <AnimatePresence mode='popLayout'>
-          {rootTasks.map((task) => (
-             <TaskChain key={task.id} task={task} allTasks={tasks} />
-          ))}
-          
-          {rootTasks.length === 0 && (
+      {/* Mobile Floating Action Button (FAB) */}
+      <AnimatePresence>
+        {!isMobileInputOpen && (
+          <motion.button
+            initial={{ scale: 0, rotate: 45 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 45 }}
+            onClick={() => setMobileInputOpen(true)}
+            className="md:hidden absolute bottom-6 right-6 z-40 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-600/30 flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition-all"
+          >
+            <Plus size={28} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Input Overlay */}
+      <AnimatePresence>
+        {isMobileInputOpen && (
+          <>
+            {/* Backdrop - Higher Z-Index to cover tabs */}
             <motion.div 
-              initial={{ opacity: 0 }} 
+              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="h-full flex flex-col items-center justify-center text-slate-400 gap-4 opacity-50 pb-20"
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileInputOpen(false)}
+              className="md:hidden fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[55]"
+            />
+            
+            {/* Input Modal - Highest Z-Index to cover tabs */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="md:hidden fixed bottom-0 left-0 right-0 z-[60] px-4 pt-0"
+              style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }} 
             >
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
-                <Plus size={32} />
-              </div>
-              <p>No active sparks. Start something new.</p>
+              <form onSubmit={handleMainSubmit} className="flex gap-2 items-center bg-white p-2 rounded-2xl shadow-xl">
+                <input
+                  ref={inputRef}
+                  autoFocus
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="What needs to happen now?"
+                  className="flex-1 bg-transparent text-slate-800 placeholder-slate-400 px-3 py-3 rounded-xl focus:outline-none"
+                />
+                <button 
+                  type="submit" 
+                  disabled={!inputValue.trim()}
+                  className="bg-indigo-600 text-white p-3 rounded-xl disabled:opacity-50 disabled:grayscale transition-all active:scale-95 flex-shrink-0"
+                >
+                  <SendHorizontal size={24} />
+                </button>
+              </form>
             </motion.div>
-          )}
-        </AnimatePresence>
-        
-        <div className="h-20" /> {/* Spacer */}
-      </div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

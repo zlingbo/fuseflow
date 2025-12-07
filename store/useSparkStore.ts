@@ -8,6 +8,7 @@ export const useSparkStore = create<SparkState>()(
     (set) => ({
       tasks: [],
       activePopoverId: null,
+      isMobileInputOpen: false,
 
       addTask: (content: string, parentId: string | null = null) => {
         const newTask: SparkNode = {
@@ -99,6 +100,10 @@ export const useSparkStore = create<SparkState>()(
 
       setActivePopoverId: (id: string | null) => {
         set(() => ({ activePopoverId: id }));
+      },
+
+      setMobileInputOpen: (isOpen: boolean) => {
+        set(() => ({ isMobileInputOpen: isOpen }));
       }
     }),
     {
