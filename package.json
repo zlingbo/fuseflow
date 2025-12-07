@@ -1,7 +1,7 @@
 {
-  "name": "spark",
+  "name": "spark-flow-tracker",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,17 +9,24 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
-    "lucide-react": "^0.556.0",
-    "framer-motion": "^12.23.25",
-    "zustand": "^5.0.9",
-    "canvas-confetti": "1.9.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.344.0",
+    "framer-motion": "^11.0.8",
+    "zustand": "^4.5.0",
+    "canvas-confetti": "^1.9.2",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@vitejs/plugin-react": "^5.0.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.2.19",
+    "@types/canvas-confetti": "^1.6.4",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4",
+    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35"
   }
 }
