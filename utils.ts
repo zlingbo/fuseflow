@@ -10,7 +10,17 @@ export const cn = (...classes: (string | undefined | null | false)[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
-// --- Sound Effects System (Retro Synth) ---
+export const formatDuration = (ms: number): string => {
+  const seconds = Math.floor(ms / 1000);
+  if (seconds < 60) return '< 1m';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}m`;
+};
+
+// --- Sound Effects System ---
 
 const createAudioContext = () => {
   const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -25,24 +35,35 @@ export const playSuccessSound = () => {
 
     const t = ctx.currentTime;
     
-    // 8-bit Coin Sound (Square Wave)
+    // Clean Sparkle Sound (Sine Waves)
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
-    osc.type = 'square';
-    
-    // Quick Arpeggio B-D#
-    osc.frequency.setValueAtTime(493.88, t); // B4
-    osc.frequency.setValueAtTime(622.25, t + 0.08); // D#5
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.exponentialRampToValueAtTime(1000, t + 0.1);
     
     gain.gain.setValueAtTime(0.1, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
     
     osc.connect(gain);
     gain.connect(ctx.destination);
     
     osc.start(t);
-    osc.stop(t + 0.4);
+    osc.stop(t + 0.5);
+
+    // Second harmonic for sparkle
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(800, t + 0.1);
+    osc2.frequency.linearRampToValueAtTime(1500, t + 0.3);
+    gain2.gain.setValueAtTime(0.05, t + 0.1);
+    gain2.gain.linearRampToValueAtTime(0, t + 0.4);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(t + 0.1);
+    osc2.stop(t + 0.4);
 
   } catch (e) {
     console.error("Audio play failed", e);
@@ -56,31 +77,22 @@ export const playFreezeSound = () => {
     
     const t = ctx.currentTime;
 
-    // Static Noise (Glitchy)
-    const bufferSize = ctx.sampleRate * 0.3;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      // Bitcrush effect: stepped random
-      data[i] = Math.round((Math.random() * 2 - 1) * 4) / 4; 
-    }
-
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.setValueAtTime(2000, t);
-
+    // Glass/Ice Sound (High frequency triangle)
+    const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.1, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.3);
-
-    noise.connect(filter);
-    filter.connect(gain);
+    
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(2000, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.3);
+    
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+    
+    osc.connect(gain);
     gain.connect(ctx.destination);
     
-    noise.start(t);
+    osc.start(t);
+    osc.stop(t + 0.3);
   } catch (e) {
     console.error("Audio play failed", e);
   }
@@ -93,15 +105,15 @@ export const playSplitSound = () => {
     
     const t = ctx.currentTime;
 
-    // Low bit crunch impact
+    // Sharp "Crack" (Sawtooth with fast decay)
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
-    osc.type = 'sawtooth'; 
-    osc.frequency.setValueAtTime(120, t); 
-    osc.frequency.exponentialRampToValueAtTime(10, t + 0.1); 
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.exponentialRampToValueAtTime(50, t + 0.1);
     
-    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.setValueAtTime(0.15, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
 
     osc.connect(gain);

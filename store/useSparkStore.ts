@@ -7,6 +7,7 @@ export const useSparkStore = create<SparkState>()(
   persist(
     (set) => ({
       tasks: [],
+      activePopoverId: null,
 
       addTask: (content: string, parentId: string | null = null) => {
         const newTask: SparkNode = {
@@ -69,32 +70,36 @@ export const useSparkStore = create<SparkState>()(
         }));
       },
 
+      updateTaskFeeling: (id: string, feeling: TaskFeeling) => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id ? { ...task, feeling } : task
+          ),
+        }));
+      },
+
       splitTask: (id: string) => {
         set((state) => {
-          const targetTask = state.tasks.find((t) => t.id === id);
-          if (!targetTask) return state;
-
+          // New Logic: Just add a child task. Do NOT re-parent the current task.
+          // This prevents the visual jumping of the parent task.
+          
           const newTask: SparkNode = {
             id: generateId(),
             content: '', // Empty content triggers edit mode in UI
             status: 'active',
-            parentId: targetTask.parentId, // Take the place of the target
+            parentId: id, // It becomes a child of the current task
             createdAt: Date.now(),
           };
 
-          // Re-link: Target becomes child of New Task
-          const updatedTasks = state.tasks.map((task) => {
-            if (task.id === id) {
-              return { ...task, parentId: newTask.id };
-            }
-            return task;
-          });
-
           return {
-            tasks: [...updatedTasks, newTask],
+            tasks: [...state.tasks, newTask],
           };
         });
       },
+
+      setActivePopoverId: (id: string | null) => {
+        set(() => ({ activePopoverId: id }));
+      }
     }),
     {
       name: 'spark-storage',

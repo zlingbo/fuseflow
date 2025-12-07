@@ -15,6 +15,7 @@ export interface SparkNode {
 
 export interface SparkState {
   tasks: SparkNode[];
+  activePopoverId: string | null; // Track which task has an open popover
   addTask: (content: string, parentId?: string | null) => void;
   completeTask: (id: string, feeling?: TaskFeeling) => void;
   freezeTask: (id: string) => void;
@@ -22,5 +23,7 @@ export interface SparkState {
   deleteTask: (id: string) => void;
   updateTaskContent: (id: string, content: string) => void;
   updateTaskReflection: (id: string, reflection: string) => void;
+  updateTaskFeeling: (id: string, feeling: TaskFeeling) => void;
   splitTask: (id: string) => void;
+  setActivePopoverId: (id: string | null) => void;
 }

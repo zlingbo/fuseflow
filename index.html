@@ -3,40 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spark | Terminal</title>
+    <title>Spark | Flow Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            colors: {
-              'retro-bg': '#0a0a0a',      // CRT Black
-              'retro-surface': '#1a1a1a', // Dark Grey Casing
-              'retro-amber': '#ffb000',   // Phosphor Amber
-              'retro-teal': '#00ffcc',    // Cyan/Teal
-              'retro-red': '#ff3333',     // Alert Red
-              'retro-dim': '#444444',     // Dimmed elements
-            },
             fontFamily: {
-              mono: ['"Space Mono"', 'monospace'],
-              sans: ['"Space Mono"', 'monospace'], // Override sans to mono for this theme
+              sans: ['Inter', 'sans-serif'],
             },
-            boxShadow: {
-              'hard': '4px 4px 0px 0px rgba(0,0,0,1)',
-              'hard-sm': '2px 2px 0px 0px rgba(0,0,0,1)',
-              'glow-amber': '0 0 10px rgba(255, 176, 0, 0.3)',
-              'glow-teal': '0 0 10px rgba(0, 255, 204, 0.3)',
-            },
-            animation: {
-              'blink': 'blink 1s step-end infinite',
-            },
-            keyframes: {
-              blink: {
-                '0%, 100%': { opacity: '1' },
-                '50%': { opacity: '0' },
+            colors: {
+              primary: {
+                50: '#eef2ff',
+                100: '#e0e7ff',
+                500: '#6366f1',
+                600: '#4f46e5',
+                700: '#4338ca',
               }
             }
           },
@@ -45,82 +30,24 @@
     </script>
     <style>
       body {
-        background-color: #050505;
-        color: #e0e0e0;
-        font-family: 'Space Mono', monospace;
+        background-color: #f8fafc; /* Slate-50 */
+        color: #1e293b; /* Slate-800 */
       }
       
-      /* Custom Scrollbar - Retro Blocky */
+      /* Smooth Scrollbar */
       ::-webkit-scrollbar {
-        width: 12px;
-        height: 12px;
-        background: #111;
+        width: 8px;
+        height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #111;
-        border-left: 1px solid #333;
+        background: transparent;
       }
       ::-webkit-scrollbar-thumb {
-        background: #333;
-        border: 1px solid #000;
-        box-shadow: inset 1px 1px 0 #555;
+        background: #cbd5e1;
+        border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #ffb000;
-      }
-
-      /* CRT Effects */
-      .scanlines {
-        background: linear-gradient(
-          to bottom,
-          rgba(255,255,255,0),
-          rgba(255,255,255,0) 50%,
-          rgba(0,0,0,0.2) 50%,
-          rgba(0,0,0,0.2)
-        );
-        background-size: 100% 4px;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        pointer-events: none;
-        z-index: 9999;
-        opacity: 0.6;
-      }
-
-      .crt-flicker {
-        animation: flicker 0.15s infinite;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(255, 176, 0, 0.01);
-        pointer-events: none;
-        z-index: 9998;
-      }
-
-      @keyframes flicker {
-        0% { opacity: 0.97; }
-        5% { opacity: 0.95; }
-        10% { opacity: 0.9; }
-        15% { opacity: 0.95; }
-        20% { opacity: 0.99; }
-        25% { opacity: 0.95; }
-        30% { opacity: 0.9; }
-        35% { opacity: 0.96; }
-        40% { opacity: 0.98; }
-        45% { opacity: 0.95; }
-        50% { opacity: 0.99; }
-        55% { opacity: 0.93; }
-        60% { opacity: 0.9; }
-        65% { opacity: 0.96; }
-        70% { opacity: 1; }
-        75% { opacity: 0.97; }
-        80% { opacity: 0.95; }
-        85% { opacity: 0.93; }
-        90% { opacity: 0.9; }
-        95% { opacity: 0.96; }
-        100% { opacity: 0.98; }
-      }
-      
-      .text-glow-amber {
-        text-shadow: 0 0 5px rgba(255, 176, 0, 0.5);
+        background: #94a3b8;
       }
     </style>
   <script type="importmap">
