@@ -11,101 +11,81 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('flow');
 
   return (
-    <div className="flex h-screen w-screen bg-background text-slate-800 overflow-hidden font-sans selection:bg-primary/20 selection:text-primary flex-col md:flex-row pb-16 md:pb-0">
+    <div className="flex h-screen w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-16 md:pb-0 selection:bg-retro-amber selection:text-black">
       
+      {/* CRT Overlay Effects */}
+      <div className="scanlines" />
+      <div className="crt-flicker" />
+
+      {/* Main Chassis Border (Desktop) */}
+      <div className="absolute inset-0 pointer-events-none border-[8px] border-retro-surface z-50 hidden md:block rounded-xl m-2 shadow-hard" />
+
       {/* Left Column: Freezer */}
-      {/* Mobile: Show only if active. Desktop: Always show (md:flex) */}
       <aside className={cn(
-        "flex-col bg-slate-50 transition-all",
-        // Mobile styles (flex-1 to take full height)
+        "flex-col bg-retro-bg transition-all md:border-r-2 md:border-retro-surface",
         activeTab === 'freezer' ? 'flex flex-1' : 'hidden',
-        // Desktop styles (override mobile hidden, fixed width)
-        "md:flex md:flex-none md:w-64 lg:w-72 md:shadow-[1px_0_20px_rgba(0,0,0,0.02)] z-20"
+        "md:flex md:flex-none md:w-72 lg:w-80 z-20"
       )}>
         <FreezerColumn />
       </aside>
 
       {/* Middle Column: Flow */}
-      {/* Mobile: Show only if active. Desktop: Always show */}
       <main className={cn(
-        "flex-col bg-background relative z-10 transition-all",
-        // Mobile styles
+        "flex-col bg-retro-bg relative z-10 transition-all",
         activeTab === 'flow' ? 'flex flex-1' : 'hidden',
-        // Desktop styles
-        "md:flex md:flex-1 md:min-w-0 md:shadow-xl md:shadow-slate-200/50"
+        "md:flex md:flex-1 md:min-w-0"
       )}>
         <FlowColumn />
       </main>
 
       {/* Right Column: Flame */}
-      {/* Mobile: Show only if active. Desktop: Show only on LG screens */}
       <aside className={cn(
-        "flex-col bg-slate-50 transition-all",
-        // Mobile styles
+        "flex-col bg-retro-bg transition-all md:border-l-2 md:border-retro-surface",
         activeTab === 'flame' ? 'flex flex-1' : 'hidden',
-        // Desktop styles
-        "lg:flex lg:flex-none lg:w-72 lg:shadow-[-1px_0_20px_rgba(0,0,0,0.02)] z-20"
+        "lg:flex lg:flex-none lg:w-72 z-20"
       )}>
         <FlameColumn />
       </aside>
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-around z-50 px-6 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      {/* Mobile Mechanical Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-retro-surface border-t-4 border-retro-dim flex items-center justify-around z-50 px-4">
         <button 
           onClick={() => setActiveTab('freezer')}
-          className="flex flex-col items-center gap-1 min-w-[64px] transition-colors duration-200"
+          className={cn(
+            "flex flex-col items-center justify-center w-20 h-12 border-2 rounded-sm transition-all active:translate-y-1 shadow-hard-sm",
+            activeTab === 'freezer' 
+              ? "bg-retro-teal text-black border-retro-teal" 
+              : "bg-retro-bg text-retro-dim border-retro-dim"
+          )}
         >
-          <Snowflake 
-            size={22} 
-            className={cn(
-              "transition-all duration-300", 
-              activeTab === 'freezer' ? "text-sky-500 fill-sky-100 scale-110" : "text-slate-400"
-            )} 
-          />
-          <span className={cn(
-            "text-[10px] font-medium transition-colors",
-            activeTab === 'freezer' ? "text-sky-500" : "text-slate-400"
-          )}>
-            Freezer
-          </span>
+          <Snowflake size={18} />
+          <span className="text-[9px] uppercase font-bold mt-1">Freezer</span>
         </button>
         
         <button 
           onClick={() => setActiveTab('flow')}
-          className="flex flex-col items-center gap-1 min-w-[64px] transition-colors duration-200"
+          className={cn(
+            "flex flex-col items-center justify-center w-20 h-12 border-2 rounded-sm transition-all active:translate-y-1 shadow-hard-sm",
+            activeTab === 'flow' 
+              ? "bg-retro-amber text-black border-retro-amber" 
+              : "bg-retro-bg text-retro-dim border-retro-dim"
+          )}
         >
-          <div className={cn(
-            "rounded-full p-1 transition-all duration-300",
-            activeTab === 'flow' ? "bg-primary/10 -translate-y-2" : ""
-          )}>
-            <Zap 
-              size={24} 
-              className={cn(
-                "transition-all duration-300", 
-                activeTab === 'flow' ? "text-primary fill-primary" : "text-slate-400"
-              )} 
-            />
-          </div>
-          {activeTab !== 'flow' && <span className="text-[10px] font-medium text-slate-400">Flow</span>}
+          <Zap size={18} />
+          <span className="text-[9px] uppercase font-bold mt-1">Flow</span>
         </button>
         
         <button 
           onClick={() => setActiveTab('flame')}
-          className="flex flex-col items-center gap-1 min-w-[64px] transition-colors duration-200"
+          className={cn(
+            "flex flex-col items-center justify-center w-20 h-12 border-2 rounded-sm transition-all active:translate-y-1 shadow-hard-sm",
+            activeTab === 'flame' 
+              ? "bg-retro-red text-black border-retro-red" 
+              : "bg-retro-bg text-retro-dim border-retro-dim"
+          )}
         >
-          <Flame 
-            size={22} 
-            className={cn(
-              "transition-all duration-300", 
-              activeTab === 'flame' ? "text-orange-500 fill-orange-100 scale-110" : "text-slate-400"
-            )} 
-          />
-          <span className={cn(
-            "text-[10px] font-medium transition-colors",
-            activeTab === 'flame' ? "text-orange-500" : "text-slate-400"
-          )}>
-            Flame
-          </span>
+          <Flame size={18} />
+          <span className="text-[9px] uppercase font-bold mt-1">Core</span>
         </button>
       </div>
     </div>

@@ -10,13 +10,7 @@ export const cn = (...classes: (string | undefined | null | false)[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
-export const triggerVibration = (pattern: number | number[] = 50) => {
-  if (typeof navigator !== 'undefined' && navigator.vibrate) {
-    navigator.vibrate(pattern);
-  }
-};
-
-// --- Sound Effects System (Web Audio API) ---
+// --- Sound Effects System (Retro Synth) ---
 
 const createAudioContext = () => {
   const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -31,31 +25,24 @@ export const playSuccessSound = () => {
 
     const t = ctx.currentTime;
     
-    // Oscillator 1: Main "Ding"
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(523.25, t); // C5
-    osc1.frequency.exponentialRampToValueAtTime(1046.5, t + 0.1); // C6
-    gain1.gain.setValueAtTime(0.1, t);
-    gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(t);
-    osc1.stop(t + 0.8);
-
-    // Oscillator 2: Sparkle high pitch
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(1046.5, t); 
-    osc2.frequency.linearRampToValueAtTime(2093, t + 0.1); 
-    gain2.gain.setValueAtTime(0.05, t);
-    gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(t);
-    osc2.stop(t + 0.4);
+    // 8-bit Coin Sound (Square Wave)
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'square';
+    
+    // Quick Arpeggio B-D#
+    osc.frequency.setValueAtTime(493.88, t); // B4
+    osc.frequency.setValueAtTime(622.25, t + 0.08); // D#5
+    
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(t);
+    osc.stop(t + 0.4);
 
   } catch (e) {
     console.error("Audio play failed", e);
@@ -69,26 +56,25 @@ export const playFreezeSound = () => {
     
     const t = ctx.currentTime;
 
-    // White noise buffer for "icy" sound
-    const bufferSize = ctx.sampleRate * 0.5; // 0.5 seconds
+    // Static Noise (Glitchy)
+    const bufferSize = ctx.sampleRate * 0.3;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
+      // Bitcrush effect: stepped random
+      data[i] = Math.round((Math.random() * 2 - 1) * 4) / 4; 
     }
 
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
     
-    // Filter to make it sound like wind/ice
     const filter = ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(1000, t);
-    filter.frequency.linearRampToValueAtTime(4000, t + 0.3);
+    filter.frequency.setValueAtTime(2000, t);
 
     const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.05, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    gain.gain.setValueAtTime(0.1, t);
+    gain.gain.linearRampToValueAtTime(0, t + 0.3);
 
     noise.connect(filter);
     filter.connect(gain);
@@ -107,31 +93,22 @@ export const playSplitSound = () => {
     
     const t = ctx.currentTime;
 
-    // Sharp "Crack" sound (Sawtooth for jagged edges)
-    // Simulating a snap of hard material
+    // Low bit crunch impact
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     
-    osc.type = 'sawtooth'; // Sharp wave
-    osc.frequency.setValueAtTime(800, t); // Start high
-    osc.frequency.exponentialRampToValueAtTime(100, t + 0.1); // Rapid drop (impact)
+    osc.type = 'sawtooth'; 
+    osc.frequency.setValueAtTime(120, t); 
+    osc.frequency.exponentialRampToValueAtTime(10, t + 0.1); 
     
-    // Quick attack, quick decay
-    gain.gain.setValueAtTime(0.0, t);
-    gain.gain.linearRampToValueAtTime(0.4, t + 0.01); 
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
 
-    // Filter out extremely high frequencies
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(3000, t);
-
-    osc.connect(filter);
-    filter.connect(gain);
+    osc.connect(gain);
     gain.connect(ctx.destination);
     
     osc.start(t);
-    osc.stop(t + 0.15);
+    osc.stop(t + 0.1);
   } catch (e) {
     console.error("Audio play failed", e);
   }

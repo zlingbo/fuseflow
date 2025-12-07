@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Zap } from 'lucide-react';
+import { Plus, Terminal } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { SparkCard } from './SparkCard';
 import { SparkNode } from '../types';
@@ -9,31 +8,23 @@ import { SparkNode } from '../types';
 // Helper: Check if a task or any of its descendants are active
 const isChainActive = (taskId: string, allTasks: SparkNode[]): boolean => {
   const task = allTasks.find(t => t.id === taskId);
-  // If task missing or frozen, it's not active contextually
   if (!task || task.status === 'frozen') return false;
-  
-  // If the task itself is active, the whole chain is active
   if (task.status === 'active') return true;
-
-  // If this task is completed, check if any immediate children start an active path
-  // We use .some() for early exit recursion
   return allTasks.some(t => t.parentId === taskId && isChainActive(t.id, allTasks));
 };
 
 // Recursive component to render task chains
 const TaskChain: React.FC<{ task: SparkNode; allTasks: SparkNode[]; depth?: number }> = ({ task, allTasks, depth = 0 }) => {
-  // Find immediate children of this task that are not frozen
   const children = allTasks
     .filter(t => t.parentId === task.id && t.status !== 'frozen')
     .sort((a, b) => a.createdAt - b.createdAt);
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* SparkCard handles its own layoutId animation */}
+    <div className="flex flex-col gap-4 group">
       <SparkCard task={task} isChild={depth > 0} />
       
       {children.length > 0 && (
-        <div className="pl-6 ml-3 border-l-2 border-slate-200 flex flex-col gap-3">
+        <div className="pl-6 ml-3 border-l-2 border-transparent border-dotted group-hover:border-retro-dim transition-colors duration-300 flex flex-col gap-4">
           <AnimatePresence mode="popLayout">
             {children.map(child => (
               <TaskChain key={child.id} task={child} allTasks={allTasks} depth={depth + 1} />
@@ -49,7 +40,6 @@ export const FlowColumn: React.FC = () => {
   const { tasks, addTask } = useSparkStore();
   const [inputValue, setInputValue] = useState('');
 
-  // Get root tasks (active/completed) that either have no parent OR their parent is frozen/deleted
   const rootTasks = tasks
     .filter(t => t.status !== 'frozen')
     .filter(t => {
@@ -61,11 +51,9 @@ export const FlowColumn: React.FC = () => {
       const aActive = isChainActive(a.id, tasks);
       const bActive = isChainActive(b.id, tasks);
 
-      // Priority 1: Active chains first
       if (aActive && !bActive) return -1;
       if (!aActive && bActive) return 1;
 
-      // Priority 2: Newest time first (based on completion time if completed, or creation time if active)
       const aTime = a.completedAt ?? a.createdAt;
       const bTime = b.completedAt ?? b.createdAt;
 
@@ -81,34 +69,45 @@ export const FlowColumn: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-background relative overflow-hidden">
-      {/* Header / Main Input */}
-      <div className="p-6 pb-2 z-40 bg-gradient-to-b from-background via-background/95 to-transparent backdrop-blur-md sticky top-0">
-        <h2 className="text-secondary text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
-          <Zap size={14} className="text-primary fill-primary/20" />
-          The Flow
-        </h2>
+    <div className="h-full flex flex-col bg-retro-bg relative overflow-hidden font-mono">
+      {/* Background Grid */}
+      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" 
+           style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+      </div>
+
+      {/* Header / CLI Input */}
+      <div className="p-6 pb-4 z-40 bg-retro-bg border-b-2 border-retro-surface sticky top-0">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-retro-amber text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+            <Terminal size={14} />
+            EXECUTION_LOG
+            <span className="w-2 h-2 bg-retro-amber rounded-full animate-blink ml-2" />
+          </h2>
+          <span className="text-[10px] text-retro-dim">SYS.READY</span>
+        </div>
         
         <form onSubmit={handleMainSubmit} className="relative group">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="What needs to happen now?"
-            className="w-full bg-surface border border-slate-200 rounded-xl px-4 py-4 pr-12 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all shadow-lg shadow-slate-200/50"
-          />
+          <div className="flex items-center bg-black border-2 border-retro-dim group-focus-within:border-retro-amber transition-colors p-3 shadow-hard-sm">
+            <span className="text-retro-amber mr-2 font-bold">&gt;_</span>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="INITIATE_TASK..."
+              className="w-full bg-transparent text-retro-amber placeholder-retro-dim focus:outline-none font-mono uppercase"
+              autoComplete="off"
+            />
+          </div>
           <button
             type="submit"
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-primary text-white rounded-lg hover:bg-indigo-600 hover:scale-105 transition-all disabled:opacity-0 disabled:scale-75 shadow-md shadow-primary/30"
+            className="hidden" // Enter key only
             disabled={!inputValue.trim()}
-          >
-            <Plus size={20} />
-          </button>
+          />
         </form>
       </div>
 
       {/* Task Stream */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 relative z-10">
         <AnimatePresence mode='popLayout'>
           {rootTasks.map((task) => (
              <TaskChain key={task.id} task={task} allTasks={tasks} />
@@ -118,12 +117,12 @@ export const FlowColumn: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0 }} 
               animate={{ opacity: 1 }}
-              className="h-full flex flex-col items-center justify-center text-slate-400 gap-4 opacity-70"
+              className="h-full flex flex-col items-center justify-center text-retro-dim gap-4 opacity-50"
             >
-              <div className="w-16 h-16 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center bg-white">
-                <Plus size={24} className="text-slate-300" />
+              <div className="w-16 h-16 border-2 border-dashed border-retro-dim flex items-center justify-center">
+                <span className="animate-pulse">_</span>
               </div>
-              <p className="text-sm">Start a new chain above</p>
+              <p className="text-xs">NO_ACTIVE_PROCESSES</p>
             </motion.div>
           )}
         </AnimatePresence>
