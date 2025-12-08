@@ -278,7 +278,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                         e.stopPropagation();
                         setActivePopoverId(showFeelingSelector ? null : task.id);
                       }}
-                      className="p-0.5 rounded hover:bg-slate-100 transition-colors opacity-70 hover:opacity-100 grayscale hover:grayscale-0"
+                      className="p-0.5 rounded hover:bg-slate-100 transition-colors opacity-70 hover:opacity-100 grayscale-[0.5] hover:grayscale-0"
                       title="Change feeling"
                     >
                         {task.feeling || '🙂'}

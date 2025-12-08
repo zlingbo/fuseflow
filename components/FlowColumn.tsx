@@ -149,11 +149,12 @@ export const FlowColumn: React.FC = () => {
       <AnimatePresence>
         {!isMobileInputOpen && (
           <motion.button
-            initial={{ scale: 0, rotate: 45 }}
-            animate={{ scale: 1, rotate: 0 }}
-            exit={{ scale: 0, rotate: 45 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            whileTap={{ y: 2 }}
             onClick={() => setMobileInputOpen(true)}
-            className="md:hidden absolute bottom-6 right-6 z-40 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-600/30 flex items-center justify-center hover:bg-indigo-700 active:scale-95 transition-all"
+            className="md:hidden fixed bottom-24 right-6 z-50 w-14 h-14 bg-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-600/30 flex items-center justify-center hover:bg-indigo-700 transition-colors"
           >
             <Plus size={28} />
           </motion.button>
@@ -179,10 +180,10 @@ export const FlowColumn: React.FC = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-[60] px-4 pt-0"
-              style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }} 
+              className="md:hidden fixed bottom-0 left-0 right-0 z-[60] px-4"
+              style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }} 
             >
-              <form onSubmit={handleMainSubmit} className="flex gap-2 items-center bg-white p-2 rounded-2xl shadow-xl">
+              <form onSubmit={handleMainSubmit} className="flex gap-3 items-end w-full">
                 <input
                   ref={inputRef}
                   autoFocus
@@ -190,12 +191,12 @@ export const FlowColumn: React.FC = () => {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="What needs to happen now?"
-                  className="flex-1 bg-transparent text-slate-800 placeholder-slate-400 px-3 py-3 rounded-xl focus:outline-none"
+                  className="flex-1 bg-white text-slate-800 placeholder-slate-400 px-4 py-3 rounded-2xl shadow-xl focus:outline-none"
                 />
                 <button 
                   type="submit" 
                   disabled={!inputValue.trim()}
-                  className="bg-indigo-600 text-white p-3 rounded-xl disabled:opacity-50 disabled:grayscale transition-all active:scale-95 flex-shrink-0"
+                  className="bg-indigo-600 text-white p-3 rounded-full shadow-xl disabled:opacity-50 disabled:grayscale transition-all active:scale-95 flex-shrink-0 aspect-square flex items-center justify-center"
                 >
                   <SendHorizontal size={24} />
                 </button>
