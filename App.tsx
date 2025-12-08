@@ -19,20 +19,24 @@ const App: React.FC = () => {
   ).length;
 
   return (
-    <div className="flex h-screen w-screen bg-slate-50 text-slate-800 font-sans overflow-hidden flex-col md:flex-row pb-16 md:pb-0">
+    <div className="flex h-screen w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-16 md:pb-0 relative selection:bg-retro-amber selection:text-black">
       
+      {/* CRT Overlay Effects */}
+      <div className="scanlines" />
+      <div className="flicker" />
+
       {/* Left Column: Freezer */}
       <aside className={cn(
-        "flex-col bg-slate-50 transition-all md:border-r border-slate-200",
+        "flex-col bg-retro-bg transition-all md:border-r-2 border-retro-surface",
         activeTab === 'freezer' ? 'flex flex-1' : 'hidden',
-        "md:flex md:flex-none md:w-72 lg:w-80 z-20"
+        "md:flex md:flex-none md:w-80 z-20"
       )}>
         <FreezerColumn />
       </aside>
 
       {/* Middle Column: Flow */}
       <main className={cn(
-        "flex-col bg-slate-50 relative z-10 transition-all",
+        "flex-col bg-retro-bg relative z-10 transition-all",
         activeTab === 'flow' ? 'flex flex-1' : 'hidden',
         "md:flex md:flex-1 md:min-w-0"
       )}>
@@ -41,45 +45,61 @@ const App: React.FC = () => {
 
       {/* Right Column: Flame */}
       <aside className={cn(
-        "flex-col bg-slate-50 transition-all md:border-l border-slate-200",
+        "flex-col bg-retro-bg transition-all md:border-l-2 border-retro-surface",
         activeTab === 'flame' ? 'flex flex-1' : 'hidden',
-        "lg:flex lg:flex-none lg:w-72 z-20"
+        "lg:flex lg:flex-none lg:w-80 z-20"
       )}>
         <FlameColumn />
       </aside>
 
-      {/* Mobile Navigation (TabBar) */}
+      {/* Mobile Navigation (Mechanical Buttons) */}
       {!isMobileInputOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-around z-50">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-retro-bg border-t-2 border-retro-amber flex items-center z-50 px-2 gap-2">
+          
           <button 
             onClick={() => setActiveTab('freezer')}
-            className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", activeTab === 'freezer' ? "text-cyan-500" : "text-slate-400")}
+            className={cn(
+              "flex-1 h-12 flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5", 
+              activeTab === 'freezer' 
+                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan shadow-[0_0_8px_rgba(0,255,153,0.3)]" 
+                : "border-retro-surface text-gray-600 hover:border-retro-cyan/50"
+            )}
           >
-            <Snowflake size={20} />
-            <span className="text-[10px] font-medium mt-1">Freezer</span>
+            <Snowflake size={18} />
+            <span className="text-[10px] uppercase font-bold mt-0.5 tracking-wider">Freeze</span>
           </button>
           
           <button 
             onClick={() => setActiveTab('flow')}
-            className={cn("flex flex-col items-center justify-center w-full h-full transition-colors", activeTab === 'flow' ? "text-indigo-600" : "text-slate-400")}
+            className={cn(
+              "flex-1 h-12 flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5", 
+              activeTab === 'flow' 
+                ? "border-retro-amber bg-retro-amber/10 text-retro-amber shadow-[0_0_8px_rgba(255,176,0,0.3)]" 
+                : "border-retro-surface text-gray-600 hover:border-retro-amber/50"
+            )}
           >
-            <Zap size={20} />
-            <span className="text-[10px] font-medium mt-1">Flow</span>
+            <Zap size={18} />
+            <span className="text-[10px] uppercase font-bold mt-0.5 tracking-wider">Flow</span>
           </button>
           
           <button 
             onClick={() => setActiveTab('flame')}
-            className={cn("flex flex-col items-center justify-center w-full h-full transition-colors relative", activeTab === 'flame' ? "text-orange-500" : "text-slate-400")}
+            className={cn(
+              "flex-1 h-12 flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 relative", 
+              activeTab === 'flame' 
+                ? "border-retro-red bg-retro-red/10 text-retro-red shadow-[0_0_8px_rgba(255,51,51,0.3)]" 
+                : "border-retro-surface text-gray-600 hover:border-retro-red/50"
+            )}
           >
             <div className="relative">
-              <Flame size={20} />
+              <Flame size={18} />
               {sparkCount > 0 && (
-                <span className="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1 min-w-[14px] h-[14px] rounded-full flex items-center justify-center border border-white">
-                  {sparkCount > 99 ? '99+' : sparkCount}
+                <span className="absolute -top-2 -right-3 bg-retro-red text-black text-[9px] font-bold px-1 min-w-[14px] h-[14px] flex items-center justify-center border border-black">
+                  {sparkCount > 99 ? '99' : sparkCount}
                 </span>
               )}
             </div>
-            <span className="text-[10px] font-medium mt-1">Flame</span>
+            <span className="text-[10px] uppercase font-bold mt-0.5 tracking-wider">Heat</span>
           </button>
         </div>
       )}

@@ -3,51 +3,116 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spark | Flow Tracker</title>
+    <title>Spark | Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'sans-serif'],
+              mono: ['"Space Mono"', 'monospace'],
+              sans: ['"Space Mono"', 'monospace'], // Force mono everywhere
             },
             colors: {
-              primary: {
-                50: '#eef2ff',
-                100: '#e0e7ff',
-                500: '#6366f1',
-                600: '#4f46e5',
-                700: '#4338ca',
+              retro: {
+                bg: '#18181b', // Lighter background (Zinc-900ish)
+                surface: '#27272a',
+                amber: '#ffb000',
+                amberDim: '#996900',
+                cyan: '#00ff99',
+                red: '#ff3333',
+                green: '#4ade80', // Terminal Green
+                dim: '#71717a', // Zinc-500
               }
+            },
+            boxShadow: {
+              'hard-sm': '2px 2px 0 0 rgba(0,0,0,0.5)',
             }
           },
         },
       }
     </script>
     <style>
+      :root {
+        --c-bg: #18181b;
+        --c-amber: #ffb000;
+        --c-cyan: #00ff99;
+      }
+
       body {
-        background-color: #f8fafc; /* Slate-50 */
-        color: #1e293b; /* Slate-800 */
+        background-color: var(--c-bg);
+        color: var(--c-amber);
+        font-family: 'Space Mono', monospace;
+        overflow: hidden; /* App handles scrolling */
       }
       
-      /* Smooth Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+      /* CRT Effects */
+      .scanlines {
+        background: linear-gradient(
+          to bottom,
+          rgba(255,255,255,0),
+          rgba(255,255,255,0) 50%,
+          rgba(0,0,0,0.1) 50%,
+          rgba(0,0,0,0.1)
+        );
+        background-size: 100% 4px;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        pointer-events: none;
+        z-index: 9999;
+        pointer-events: none;
       }
-      ::-webkit-scrollbar-track {
-        background: transparent;
+
+      .flicker {
+        animation: flicker 0.15s infinite;
+        pointer-events: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(255, 176, 0, 0.02);
+        z-index: 9998;
+      }
+
+      @keyframes flicker {
+        0% { opacity: 0.9; }
+        50% { opacity: 1.0; }
+        100% { opacity: 0.9; }
+      }
+
+      .text-glow {
+        text-shadow: 0 0 4px rgba(255, 176, 0, 0.5);
+      }
+      
+      .text-glow-cyan {
+        text-shadow: 0 0 4px rgba(0, 255, 153, 0.5);
+      }
+      
+      .text-glow-red {
+        text-shadow: 0 0 4px rgba(255, 51, 51, 0.5);
+      }
+
+      .text-glow-green {
+        text-shadow: 0 0 4px rgba(74, 222, 128, 0.5);
+      }
+
+      /* Blocky Scrollbar */
+      ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+        background: #111;
       }
       ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
+        background: #333;
+        border: 1px solid #000;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+        background: #ffb000;
+      }
+      ::-webkit-scrollbar-track {
+        background: #000;
+        border-left: 1px solid #333;
       }
     </style>
   <script type="importmap">

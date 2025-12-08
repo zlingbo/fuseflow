@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Trash2, Check, CornerDownRight, Grab, MessageSquare, Hammer, Snowflake } from 'lucide-react';
+import { Trash2, CornerDownRight, MessageSquare, Hammer, Snowflake } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { SparkNode, TaskFeeling } from '../types';
 import { useSparkStore } from '../store/useSparkStore';
@@ -10,12 +10,6 @@ interface SparkCardProps {
   task: SparkNode;
   isChild?: boolean;
 }
-
-const springTransition = {
-  type: "spring",
-  stiffness: 300, // Softer stiffness to reduce jumpiness
-  damping: 30,
-} as const;
 
 export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) => {
   const { 
@@ -33,16 +27,11 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
   const [showNextInput, setShowNextInput] = useState(false);
   const [nextInputVal, setNextInputVal] = useState('');
-  
-  // Reflection state
   const [isEditingReflection, setIsEditingReflection] = useState(false);
   const [reflectionVal, setReflectionVal] = useState(task.reflection || '');
-  
-  // Content Edit state
   const [isEditingContent, setIsEditingContent] = useState(task.content === '');
   const [contentVal, setContentVal] = useState(task.content);
 
-  // Derived state for popover
   const showFeelingSelector = activePopoverId === task.id;
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,33 +40,17 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const popoverRef = useRef<HTMLDivElement>(null);
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
+  const isCompleted = task.status === 'completed';
 
   // Drag logic
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, -100, 0], [0, 1, 1]);
   const freezeIndicatorOpacity = useTransform(x, [-150, -50], [1, 0]);
-  
-  const isCompleted = task.status === 'completed';
 
-  useEffect(() => {
-    if (showNextInput && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [showNextInput]);
+  useEffect(() => { if (showNextInput && inputRef.current) inputRef.current.focus(); }, [showNextInput]);
+  useEffect(() => { if (isEditingReflection && reflectionInputRef.current) reflectionInputRef.current.focus(); }, [isEditingReflection]);
+  useEffect(() => { if (isEditingContent && contentInputRef.current) contentInputRef.current.focus(); }, [isEditingContent]);
 
-  useEffect(() => {
-    if (isEditingReflection && reflectionInputRef.current) {
-        reflectionInputRef.current.focus();
-    }
-  }, [isEditingReflection]);
-
-  useEffect(() => {
-    if (isEditingContent && contentInputRef.current) {
-      contentInputRef.current.focus();
-    }
-  }, [isEditingContent]);
-
-  // Handle click outside to close popover
   useEffect(() => {
     if (showFeelingSelector) {
       const handleClickOutside = (event: MouseEvent) => {
@@ -85,7 +58,6 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
           setActivePopoverId(null);
         }
       };
-      
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
@@ -94,12 +66,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const triggerConfetti = (rect: DOMRect) => {
     const x = (rect.left + rect.width / 2) / window.innerWidth;
     const y = (rect.top + rect.height / 2) / window.innerHeight;
-
     confetti({
-      particleCount: 100,
-      spread: 70,
+      particleCount: 80,
+      spread: 60,
       origin: { x, y },
-      colors: ['#6366f1', '#ec4899', '#f59e0b'],
+      colors: ['#ffb000', '#00ff99', '#ff3333'],
+      shapes: ['square'],
       disableForReducedMotion: true,
       zIndex: 100,
     });
@@ -108,17 +80,15 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const triggerShatter = (rect: DOMRect) => {
     const x = (rect.left + rect.width / 2) / window.innerWidth;
     const y = (rect.top + rect.height / 2) / window.innerHeight;
-
     confetti({
-      particleCount: 15,
-      spread: 40,
+      particleCount: 20,
+      spread: 30,
       origin: { x, y },
-      colors: ['#94a3b8', '#cbd5e1'], // Slate dust
+      colors: ['#333', '#555'],
       shapes: ['square'],
-      gravity: 4.0,
-      scalar: 0.5,
-      startVelocity: 15,
-      ticks: 50,
+      gravity: 5.0,
+      scalar: 0.8,
+      startVelocity: 10,
       disableForReducedMotion: true,
       zIndex: 100,
     });
@@ -129,7 +99,6 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       const rect = e.currentTarget.getBoundingClientRect();
       triggerConfetti(rect);
       playSuccessSound();
-      
       completeTask(task.id, '🙂');
       setShowNextInput(true);
     }
@@ -156,19 +125,8 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       updateTaskContent(task.id, contentVal);
       setIsEditingContent(false);
     } else {
-      if (!task.content) {
-        deleteTask(task.id);
-      } else {
-        setContentVal(task.content);
-        setIsEditingContent(false);
-      }
-    }
-  };
-
-  const handleDragEnd = (event: any, info: any) => {
-    if (info.offset.x < -100 && !isCompleted) {
-      playFreezeSound();
-      freezeTask(task.id);
+      if (!task.content) { deleteTask(task.id); } 
+      else { setContentVal(task.content); setIsEditingContent(false); }
     }
   };
 
@@ -180,285 +138,209 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   };
 
   return (
-    <>
-      <div className="relative group">
-        {/* Freeze Indicator (Behind the card) */}
-        <motion.div 
-          style={{ opacity: freezeIndicatorOpacity }}
-          className="absolute right-full top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
-        >
-          <span className="text-cyan-500 font-bold text-sm tracking-wider">Release to Freeze</span>
-        </motion.div>
+    <div className="relative group pl-1">
+      {/* Connector Line (Dotted Circuit) */}
+      {isChild && (
+        <div className="absolute -left-4 top-0 w-4 h-6 border-l-2 border-b-2 border-dotted border-retro-amber/40 rounded-bl-none translate-y-[-10px]" />
+      )}
 
-        <motion.div
-          layout
-          initial={isNew ? { opacity: 0, scale: 0.95 } : false}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-          transition={springTransition}
-          style={{ x, opacity }}
-          drag={!isCompleted ? "x" : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={{ left: 0.5, right: 0.1 }}
-          onDragEnd={handleDragEnd}
-          className={cn(
-            "relative z-10 p-4 rounded-2xl touch-pan-y",
-            isCompleted
-              ? "bg-slate-50 border border-slate-100 text-slate-400"
-              : "bg-white border border-transparent text-slate-700 shadow-sm hover:shadow-md hover:border-indigo-100"
-          )}
-        >
-          {/* Connector Line (Curved) */}
-          {isChild && (
-            <div 
-              className="absolute -left-5 top-0 w-5 h-8 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            >
-              <div className="absolute inset-0 border-b-2 border-l-2 border-slate-200 rounded-bl-xl -translate-y-1/2" />
-            </div>
-          )}
+      {/* Freeze Indicator */}
+      <motion.div 
+        style={{ opacity: freezeIndicatorOpacity }}
+        className="absolute right-full top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
+      >
+        <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono">[FREEZE_CMD]</span>
+      </motion.div>
 
-          <div className="flex items-start gap-3">
-            {/* Checkbox */}
-            <button
-              onClick={handleComplete}
-              disabled={isCompleted}
-              className={cn(
-                "mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
-                isCompleted
-                  ? "bg-indigo-100 border-indigo-100 text-indigo-500"
-                  : "border-slate-300 hover:border-indigo-400 text-transparent"
-              )}
-            >
-              <Check size={12} strokeWidth={3} />
-            </button>
-
-            {/* Content Wrapper */}
-            <div className="flex-1 min-w-0">
-              {isEditingContent ? (
-                <form onSubmit={handleContentSubmit}>
-                  <input
-                    ref={contentInputRef}
-                    value={contentVal}
-                    onChange={(e) => setContentVal(e.target.value)}
-                    onBlur={handleContentSubmit}
-                    className="w-full text-base bg-transparent text-indigo-700 border-b-2 border-indigo-100 focus:border-indigo-500 focus:outline-none px-1 -ml-1 transition-colors"
-                    placeholder="Type a step..."
-                  />
-                </form>
-              ) : (
-                <p 
-                  onClick={() => !isCompleted && setIsEditingContent(true)}
-                  className={cn(
-                    "text-base leading-relaxed break-words cursor-text",
-                    isCompleted && "line-through opacity-80"
-                  )}
-                >
-                  {task.content}
-                </p>
-              )}
-              
-              {/* Metadata */}
-              <div className="mt-1 flex items-center gap-2 text-xs text-slate-400 select-none flex-wrap">
-                <span title="Created">{new Date(task.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                
-                {isCompleted && task.completedAt && (
-                  <>
-                    <span className="text-slate-300">→</span>
-                    <span title="Finished">{new Date(task.completedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[10px] font-medium" title="Duration">
-                      {formatDuration(task.completedAt - task.createdAt)}
-                    </span>
-                  </>
-                )}
-
-                {isCompleted && (
-                  <div className="relative inline-block ml-1">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActivePopoverId(showFeelingSelector ? null : task.id);
-                      }}
-                      className="p-0.5 rounded hover:bg-slate-100 transition-colors opacity-70 hover:opacity-100 grayscale-[0.5] hover:grayscale-0"
-                      title="Change feeling"
-                    >
-                        {task.feeling || '🙂'}
-                    </button>
-                    
-                    {/* Popover Menu */}
-                    <AnimatePresence>
-                      {showFeelingSelector && (
-                        <motion.div 
-                          ref={popoverRef}
-                          initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                          transition={{ duration: 0.1 }}
-                          className="absolute top-full left-0 mt-1 bg-white shadow-xl border border-slate-100 rounded-lg p-1 flex gap-1 z-50 min-w-max"
-                        >
-                          {(['😐', '🙂', '🤩'] as TaskFeeling[]).map((f) => (
-                            <button
-                              key={f}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateTaskFeeling(task.id, f);
-                                setActivePopoverId(null);
-                              }}
-                              className={cn(
-                                "p-1.5 rounded-md hover:bg-slate-50 text-base transition-colors",
-                                task.feeling === f ? "bg-indigo-50" : ""
-                              )}
-                            >
-                              {f}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </div>
-
-              {/* Reflection Display */}
-              {(task.reflection && !isEditingReflection) && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-2 relative pl-3"
-                >
-                  <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-indigo-200 rounded-full" />
-                  <p className="text-sm text-slate-500 italic leading-relaxed">
-                    {task.reflection}
-                  </p>
-                </motion.div>
-              )}
-
-              {/* Reflection Edit Form */}
-              {isEditingReflection && (
-                <motion.form
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-2"
-                    onSubmit={handleReflectionSubmit}
-                >
-                  <textarea
-                      ref={reflectionInputRef}
-                      value={reflectionVal}
-                      onChange={(e) => setReflectionVal(e.target.value)}
-                      placeholder="How did this make you feel?"
-                      className="w-full text-sm bg-slate-50 text-slate-600 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none min-h-[60px]"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleReflectionSubmit(e);
-                        }
-                      }}
-                  />
-                  <div className="flex justify-end gap-2 mt-1">
-                    <button 
-                      type="button" 
-                      onClick={() => setIsEditingReflection(false)}
-                      className="text-xs text-slate-400 hover:text-slate-600 px-2 py-1"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="text-xs bg-indigo-500 text-white px-3 py-1 rounded-full font-medium hover:bg-indigo-600"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </motion.form>
-              )}
-            </div>
-
-            {/* Actions */}
-            {!isEditingReflection && (
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                <button
-                  onClick={() => setIsEditingReflection(!isEditingReflection)}
-                  className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    (task.reflection || isEditingReflection) 
-                      ? "text-indigo-500 bg-indigo-50" 
-                      : "text-slate-300 hover:text-indigo-500 hover:bg-indigo-50"
-                  )}
-                >
-                  <MessageSquare size={16} />
-                </button>
-
-                {!isCompleted ? (
-                  <>
-                    <motion.button
-                      whileTap={{ scale: 0.9 }}
-                      onClick={handleSplit}
-                      className="p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                      title="Split into smaller steps"
-                    >
-                      <Hammer size={16} />
-                    </motion.button>
-                    <button
-                      onClick={() => { playFreezeSound(); freezeTask(task.id); }}
-                      className="p-1.5 text-slate-300 hover:text-cyan-500 hover:bg-cyan-50 rounded-lg transition-colors"
-                      title="Freeze for later"
-                    >
-                      <Snowflake size={16} />
-                    </button>
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                    <div className="hidden md:flex p-1.5 text-slate-300 cursor-grab active:cursor-grabbing">
-                      <Grab size={16} />
-                    </div>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setShowNextInput(true)}
-                    className="p-1.5 text-indigo-400 hover:text-indigo-600 bg-indigo-50 rounded-lg transition-colors"
-                    title="Continue chain"
-                  >
-                    <CornerDownRight size={16} />
-                  </button>
-                )}
-              </div>
+      <motion.div
+        layout
+        initial={isNew ? { opacity: 0 } : false}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0, transition: { duration: 0.1 } }}
+        // Mechanical Transition: No spring, just a fast, clean slide
+        transition={{ 
+          layout: { type: "tween", duration: 0.15, ease: "circOut" },
+          opacity: { duration: 0.1 }
+        }}
+        style={{ x, opacity }}
+        drag={!isCompleted ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.5, right: 0.1 }}
+        onDragEnd={(e, info) => { if (info.offset.x < -100 && !isCompleted) { playFreezeSound(); freezeTask(task.id); }}}
+        className={cn(
+          "relative z-10 p-3 border-2 font-mono",
+          // Retro Card Styling: Hard edges, box shadow, colors
+          isCompleted
+            ? "bg-retro-surface border-gray-700 text-gray-500"
+            : "bg-black border-retro-amber text-retro-amber shadow-[4px_4px_0px_0px_#996900] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_#996900]"
+        )}
+      >
+        <div className="flex items-start gap-3">
+          {/* ASCII Checkbox */}
+          <button
+            onClick={handleComplete}
+            disabled={isCompleted}
+            className={cn(
+              "mt-0.5 font-bold text-lg leading-none hover:text-retro-cyan transition-colors",
+              isCompleted ? "text-retro-cyan" : "text-retro-amber"
             )}
-          </div>
+          >
+            {isCompleted ? "[x]" : "[ ]"}
+          </button>
 
-          {/* Next Step Input Popup */}
-          <AnimatePresence>
-            {showNextInput && (
-              <motion.form
-                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                onSubmit={handleNextInputSubmit}
-                className="overflow-hidden"
+          <div className="flex-1 min-w-0">
+            {isEditingContent ? (
+              <form onSubmit={handleContentSubmit}>
+                <input
+                  ref={contentInputRef}
+                  value={contentVal}
+                  onChange={(e) => setContentVal(e.target.value)}
+                  onBlur={handleContentSubmit}
+                  className="w-full bg-black text-retro-cyan border-b-2 border-retro-cyan focus:outline-none font-mono"
+                  placeholder="INPUT_COMMAND..."
+                />
+              </form>
+            ) : (
+              <p 
+                onClick={() => !isCompleted && setIsEditingContent(true)}
+                className={cn(
+                  "text-sm leading-relaxed break-words cursor-text font-bold",
+                  isCompleted && "line-through opacity-50 decoration-2"
+                )}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-5 flex justify-center">
-                    <CornerDownRight size={14} className="text-indigo-300" />
-                  </div>
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={nextInputVal}
-                    onChange={(e) => setNextInputVal(e.target.value)}
-                    placeholder="趁热打铁想做什么？"
-                    className="flex-1 bg-indigo-50/50 text-sm rounded-lg px-3 py-2 text-indigo-700 placeholder-indigo-300 focus:outline-none focus:ring-1 focus:ring-indigo-200"
-                    onBlur={() => !nextInputVal && setShowNextInput(false)}
-                  />
-                  <button type="submit" className="text-xs font-bold text-indigo-500 hover:text-indigo-700 px-2">
-                      GO
+                {task.content}
+              </p>
+            )}
+            
+            {/* Tech Metadata */}
+            <div className="mt-2 flex items-center gap-2 text-[10px] tracking-widest opacity-80 select-none flex-wrap uppercase">
+              <span className="text-gray-500">T_STAMP:</span>
+              <span>{new Date(task.createdAt).toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'})}</span>
+              
+              {isCompleted && task.completedAt && (
+                <>
+                  <span className="text-gray-600">»</span>
+                  <span className="text-retro-cyan">DONE: {new Date(task.completedAt).toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'})}</span>
+                  <span className="border border-gray-700 px-1 text-gray-400">
+                    {formatDuration(task.completedAt - task.createdAt)}
+                  </span>
+                </>
+              )}
+
+              {isCompleted && (
+                <div className="relative inline-block ml-auto">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setActivePopoverId(showFeelingSelector ? null : task.id); }}
+                    className={cn(
+                      "hover:text-retro-cyan hover:underline transition-colors grayscale-[0.5] hover:grayscale-0",
+                    )}
+                  >
+                      MOOD: {task.feeling || '🙂'}
                   </button>
+                  
+                  <AnimatePresence>
+                    {showFeelingSelector && (
+                      <motion.div 
+                        ref={popoverRef}
+                        initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                        className="absolute bottom-full right-0 mb-1 bg-black border-2 border-retro-cyan shadow-[4px_4px_0_0_rgba(0,255,153,0.3)] p-1 flex gap-1 z-50 min-w-max"
+                      >
+                        {(['😐', '🙂', '🤩'] as TaskFeeling[]).map((f) => (
+                          <button
+                            key={f}
+                            onClick={(e) => { e.stopPropagation(); updateTaskFeeling(task.id, f); setActivePopoverId(null); }}
+                            className={cn("p-1 hover:bg-retro-cyan hover:text-black transition-colors", task.feeling === f ? "bg-retro-cyan/20" : "")}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+
+            {/* Reflection: Code Comment Style */}
+            {(task.reflection && !isEditingReflection) && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 text-xs text-retro-green/80 font-mono text-glow-green">
+                <span className="opacity-50 mr-1">//</span>{task.reflection}
+              </motion.div>
+            )}
+
+            {isEditingReflection && (
+              <motion.form
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-2 border-l-2 border-retro-green pl-2"
+                  onSubmit={handleReflectionSubmit}
+              >
+                <textarea
+                    ref={reflectionInputRef}
+                    value={reflectionVal}
+                    onChange={(e) => setReflectionVal(e.target.value)}
+                    placeholder="// ADD_COMMIT_MSG..."
+                    className="w-full text-xs bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30"
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReflectionSubmit(e); }}}
+                />
+                <div className="flex justify-end gap-2">
+                  <button type="button" onClick={() => setIsEditingReflection(false)} className="text-[10px] uppercase text-retro-green/50 hover:text-retro-green">Esc</button>
+                  <button type="submit" className="text-[10px] uppercase bg-retro-green text-black px-2 font-bold hover:bg-white">Commit</button>
                 </div>
               </motion.form>
             )}
-          </AnimatePresence>
-        </motion.div>
-      </div>
-    </>
+          </div>
+
+          {/* Actions: Text Buttons / ASCII Icons */}
+          {!isEditingReflection && (
+            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button onClick={() => setIsEditingReflection(!isEditingReflection)} className="text-gray-600 hover:text-retro-green" title="Comment">
+                <MessageSquare size={14} />
+              </button>
+
+              {!isCompleted ? (
+                <>
+                  <button onClick={handleSplit} className="text-gray-600 hover:text-retro-amber" title="Split">
+                    <Hammer size={14} />
+                  </button>
+                  <button onClick={() => { playFreezeSound(); freezeTask(task.id); }} className="text-gray-600 hover:text-retro-cyan" title="Freeze">
+                    <Snowflake size={14} />
+                  </button>
+                  <button onClick={() => deleteTask(task.id)} className="text-gray-600 hover:text-retro-red" title="Delete">
+                    <Trash2 size={14} />
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => setShowNextInput(true)} className="text-gray-600 hover:text-retro-cyan" title="Continue">
+                  <CornerDownRight size={14} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Next Step CLI Input */}
+        <AnimatePresence>
+          {showNextInput && (
+            <motion.form
+              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              onSubmit={handleNextInputSubmit}
+              className="mt-2 border-t border-dashed border-gray-800 pt-2 flex items-center gap-2"
+            >
+              <span className="text-retro-cyan text-xs">GO_TO &gt;</span>
+              <input
+                ref={inputRef}
+                type="text"
+                value={nextInputVal}
+                onChange={(e) => setNextInputVal(e.target.value)}
+                placeholder="NEXT_ACTION..."
+                className="flex-1 bg-black text-xs text-white focus:outline-none font-mono"
+                onBlur={() => !nextInputVal && setShowNextInput(false)}
+              />
+              <button type="submit" className="text-[10px] bg-retro-amber text-black px-1 font-bold">EXEC</button>
+            </motion.form>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 };

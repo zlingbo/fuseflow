@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flame, Download } from 'lucide-react';
+import { Flame, Activity, Download } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { motion } from 'framer-motion';
 
@@ -11,33 +11,16 @@ export const FlameColumn: React.FC = () => {
     (t) => t.status === 'completed' && t.completedAt && t.completedAt > today
   ).length;
 
-  // Calculate "Chain Bonus"
-  // If a task is completed, and its parent was ALSO completed today, add extra heat
-  let heatScore = 0;
-  tasks.forEach(t => {
-      if (t.status === 'completed' && t.completedAt && t.completedAt > today) {
-          heatScore += 1; // Base score
-          if (t.parentId) {
-              const parent = tasks.find(p => p.id === t.parentId);
-              if (parent && parent.status === 'completed' && parent.completedAt && parent.completedAt > today) {
-                  heatScore += 1; // Chain bonus
-              }
-          }
-      }
-  });
-
-  const intensity = Math.min(heatScore, 10); // Cap at 10 for visuals
+  const intensity = Math.min(completedToday, 5);
 
   const flameColors = [
-    'text-slate-300', // 0
-    'text-orange-300', // 1-2
-    'text-orange-400', // 3-4
-    'text-orange-500', // 5-6
-    'text-red-500',    // 7-8
-    'text-rose-600',   // 9-10
+    'text-retro-dim', // 0
+    'text-retro-amber opacity-40', // 1
+    'text-retro-amber', // 2
+    'text-retro-red opacity-80', // 3
+    'text-retro-red', // 4
+    'text-white drop-shadow-[0_0_10px_rgba(255,51,51,1)]', // 5
   ];
-  
-  const currentColor = flameColors[Math.min(Math.floor(intensity / 2), 5)];
 
   const handleExport = () => {
     try {
@@ -46,107 +29,93 @@ export const FlameColumn: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `spark-data-${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `SPARK_DUMP_${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Failed to export data');
+      alert('DUMP_FAIL');
     }
   };
 
   return (
-    <div className="h-full bg-slate-50 flex flex-col items-center">
-      <div className="p-6 w-full bg-slate-50">
-        <h2 className="text-orange-600 font-bold uppercase tracking-wider text-xs flex items-center gap-2">
-          <Flame size={14} />
-          THE FLAME
+    <div className="h-full bg-retro-bg flex flex-col items-center font-mono border-l-2 border-retro-surface relative overflow-hidden">
+       {/* Background Grid - Red Tint */}
+       <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none" 
+           style={{ backgroundImage: 'linear-gradient(#ff3333 1px, transparent 1px), linear-gradient(90deg, #ff3333 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+      </div>
+
+      <div className="p-6 w-full z-10 border-b-2 border-retro-surface bg-retro-bg">
+        <h2 className="text-retro-red text-xs font-bold uppercase tracking-widest flex items-center justify-end gap-2 mb-1">
+          SYSTEM_HEAT
+          <Activity size={14} />
         </h2>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full gap-8">
+      <div className="flex-1 flex flex-col items-center justify-center w-full gap-8 z-10">
         
-        {/* Dynamic Flame Visual */}
-        <div className="relative">
-             {/* Glow */}
-            <motion.div 
-                animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.1, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className={`absolute inset-0 blur-2xl rounded-full ${currentColor.replace('text-', 'bg-').replace('600', '200').replace('500', '200')}`}
-            />
+        {/* Pixel Flame Visual */}
+        <div className="relative border-4 border-retro-surface bg-black p-4 shadow-hard-sm">
+            {/* "Screen" Effect */}
+            <div className="absolute inset-0 bg-retro-red/10 pointer-events-none" />
             
             <motion.div
                 animate={{
-                    scale: [1, 1.05, 1],
-                    rotate: [0, 2, -2, 0],
+                    scale: [1, 1.1, 1],
+                    opacity: [0.8, 1, 0.8],
                 }}
                 transition={{
-                    duration: 2 - (intensity * 0.1), // Faster when hotter
+                    duration: 0.2, // Fast glitch flicker
                     repeat: Infinity,
+                    repeatType: "reverse"
                 }}
-                className={`relative z-10 ${currentColor} transition-colors duration-1000`}
+                className={`transition-colors duration-1000 ${flameColors[intensity]}`}
             >
-                <Flame size={80 + (intensity * 5)} strokeWidth={1.5} fill="currentColor" fillOpacity={0.2 + (intensity * 0.05)} />
+                {/* Using standard icon but framing it to look like a sprite */}
+                <Flame size={64} strokeWidth={2} fill="currentColor" />
             </motion.div>
-            
-            {/* Particles */}
-            <div className="absolute inset-0 pointer-events-none">
-                 {[...Array(intensity * 2)].map((_, i) => (
-                     <motion.div
-                        key={i}
-                        className={`absolute w-1 h-1 rounded-full ${currentColor.replace('text-', 'bg-')}`}
-                        initial={{ opacity: 0, y: 0, x: 0 }}
-                        animate={{ 
-                            opacity: [0, 1, 0], 
-                            y: -60 - Math.random() * 40, 
-                            x: (Math.random() - 0.5) * 40 
-                        }}
-                        transition={{ 
-                            duration: 1 + Math.random(), 
-                            repeat: Infinity, 
-                            delay: Math.random() * 2 
-                        }}
-                        style={{ left: '50%', top: '60%' }}
-                     />
-                 ))}
-            </div>
         </div>
 
-        {/* Stats */}
-        <div className="text-center">
+        {/* Stats - Seven Segment Simulation */}
+        <div className="text-center relative z-10">
             <motion.div 
                 key={completedToday}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className={`text-5xl font-bold tracking-tighter ${currentColor} transition-colors duration-1000`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-6xl font-bold text-retro-red font-mono tracking-tighter"
+                style={{ textShadow: "0 0 10px rgba(255, 51, 51, 0.5)" }}
             >
-                {completedToday}
+                {completedToday.toString().padStart(2, '0')}
             </motion.div>
-            <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-2">SPARKS TODAY</p>
+            <p className="text-[10px] text-retro-dim uppercase tracking-widest mt-1 border-t border-retro-dim pt-1 inline-block">
+                CYCLE_COUNT
+            </p>
         </div>
 
-        {/* Encouragement */}
-        <div className="w-2/3 text-center">
-            <p className="text-sm text-slate-500 font-medium italic">
-                {heatScore === 0 
-                    ? "Ignite your first spark." 
-                    : heatScore < 5 
-                    ? "The flame is kindling..." 
-                    : "You're on fire! Keep the flow."}
+        {/* System Message */}
+        <div className="w-3/4 p-3 border border-retro-dim bg-retro-surface/30 text-center">
+            <p className="text-[10px] text-retro-amber leading-relaxed font-bold uppercase">
+                {completedToday === 0 
+                    ? ">> SYSTEM_IDLE" 
+                    : completedToday < 3 
+                    ? ">> WARMUP_SEQ" 
+                    : completedToday < 5
+                    ? ">> OPTIMAL_FLOW"
+                    : ">> OVERCLOCKING"}
             </p>
         </div>
       </div>
 
       {/* Footer / Actions */}
-      <div className="p-6 mt-auto w-full">
+      <div className="p-6 mt-auto z-10 w-full">
         <button 
           onClick={handleExport}
-          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-slate-500 bg-white hover:bg-slate-100 hover:text-slate-800 transition-colors px-4 py-3 rounded-xl border border-slate-200 shadow-sm"
+          className="w-full flex items-center justify-center gap-2 text-[10px] font-bold text-black bg-retro-dim hover:bg-retro-amber transition-colors px-3 py-3 border-2 border-transparent hover:border-retro-amber shadow-hard-sm"
         >
-          <Download size={14} />
-          Export Data JSON
+          <Download size={12} />
+          INIT_DUMP.JSON
         </button>
       </div>
     </div>
