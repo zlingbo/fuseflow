@@ -19,7 +19,7 @@ const App: React.FC = () => {
   ).length;
 
   return (
-    <div className="flex h-screen w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-16 md:pb-0 relative selection:bg-retro-amber selection:text-black">
+    <div className="flex h-[100dvh] w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-16 md:pb-0 relative selection:bg-retro-amber selection:text-black">
       
       {/* CRT Overlay Effects */}
       <div className="scanlines" />
@@ -36,7 +36,7 @@ const App: React.FC = () => {
 
       {/* Middle Column: Flow */}
       <main className={cn(
-        "flex-col bg-retro-bg relative z-10 transition-all",
+        "flex-col bg-retro-bg relative z-10 transition-all min-h-0",
         activeTab === 'flow' ? 'flex flex-1' : 'hidden',
         "md:flex md:flex-1 md:min-w-0"
       )}>

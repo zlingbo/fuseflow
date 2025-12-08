@@ -74,8 +74,8 @@ export const FlowColumn: React.FC = () => {
     <div className="h-full flex flex-col bg-retro-bg relative overflow-hidden">
       {activePopoverId && <div className="fixed inset-0 z-45 bg-transparent" />}
 
-      {/* Header */}
-      <div className="p-4 bg-retro-bg z-40 sticky top-0 border-b-2 border-retro-surface flex justify-between items-center">
+      {/* Header - Fixed Flex Item */}
+      <div className="flex-none p-4 bg-retro-bg z-40 border-b-2 border-retro-surface flex justify-between items-center sticky top-0">
          <h2 className="text-retro-amber font-bold text-sm tracking-widest flex items-center gap-2 text-glow">
            <Zap size={16} />
            &gt;_ EXECUTION_LOG
@@ -83,8 +83,8 @@ export const FlowColumn: React.FC = () => {
          <div className="w-2 h-4 bg-retro-amber animate-pulse"></div>
       </div>
 
-      {/* Task Stream */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 relative z-10 pb-24 md:pb-4 scroll-smooth">
+      {/* Task Stream - Scrollable Flex Item */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4 relative z-10 pb-24 md:pb-4 scroll-smooth">
         <AnimatePresence mode='popLayout'>
           {rootTasks.map((task) => <TaskChain key={task.id} task={task} allTasks={tasks} />)}
         </AnimatePresence>
@@ -92,7 +92,7 @@ export const FlowColumn: React.FC = () => {
       </div>
 
       {/* Desktop Input - CLI Style */}
-      <div className="hidden md:block px-4 pt-2 pb-4 z-30 bg-retro-bg border-t-2 border-retro-surface">
+      <div className="hidden md:block px-4 pt-2 pb-4 z-30 bg-retro-bg border-t-2 border-retro-surface flex-none">
         <form onSubmit={handleMainSubmit} className="flex gap-2 items-center bg-black border-2 border-retro-amber p-2 shadow-[4px_4px_0_0_#996900]">
           <span className="text-retro-cyan font-bold">&gt;</span>
           <input
