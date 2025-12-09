@@ -209,12 +209,13 @@ export const FlameColumn: React.FC = () => {
                   <div
                     key={day.ts}
                     className={cn(
-                      'w-3 h-3 rounded-[2px] border transition-all duration-200 bg-transparent',
+                      'w-4 h-4 md:w-3 md:h-3 rounded-[3px] md:rounded-[2px] border transition-all duration-150 bg-transparent',
                       hoverDay?.ts === day.ts && 'scale-110'
                     )}
                     style={getHeatStyle(day.count)}
                     onMouseEnter={() => setHoverDay(day)}
                     onMouseLeave={() => setHoverDay(null)}
+                    onClick={() => setHoverDay((prev) => (prev?.ts === day.ts ? null : day))}
                     title={`${new Date(day.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${day.count}`}
                   />
                 ))}

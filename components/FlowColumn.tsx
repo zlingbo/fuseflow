@@ -85,7 +85,7 @@ export const FlowColumn: React.FC = () => {
          <div className="flex items-center gap-3">
            <button
              onClick={archiveCompleted}
-             className="text-[10px] uppercase tracking-widest text-retro-amber hover:text-retro-cyan transition-colors border border-retro-amber/50 px-2 py-1 rounded-sm"
+             className="text-xs md:text-[10px] uppercase tracking-widest text-retro-amber hover:text-retro-cyan transition-colors border border-retro-amber/50 px-3 py-2 md:px-2 md:py-1 rounded md:rounded-sm"
              title="Archive completed tasks (kept for dump)"
            >
              ARCHIVE
