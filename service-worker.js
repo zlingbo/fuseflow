@@ -1,6 +1,6 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `spark-cache-${CACHE_VERSION}`;
-const PRECACHE = ['/', '/index.html', '/manifest.webmanifest'];
+const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon.png'];
 const RUNTIME_CACHE_ORIGINS = [
   self.location.origin,
   'https://aistudiocdn.com',
