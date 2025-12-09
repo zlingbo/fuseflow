@@ -59,14 +59,15 @@
     .scanlines {
       background: repeating-linear-gradient(to bottom,
           rgba(255, 255, 255, 0.02),
-          rgba(255, 255, 255, 0.02) 2px,
-          rgba(0, 0, 0, 0.05) 2px,
-          rgba(0, 0, 0, 0.05) 4px);
+          rgba(255, 255, 255, 0.02) 1.5px,
+          rgba(0, 0, 0, 0.06) 1.5px,
+          rgba(0, 0, 0, 0.06) 4px);
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 9999;
       mix-blend-mode: screen;
+      opacity: 0.9;
     }
 
     /* CRT Vignette - Push to edges only */

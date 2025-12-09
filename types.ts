@@ -7,6 +7,7 @@ export interface SparkNode {
   content: string;
   status: TaskStatus;
   parentId: string | null;
+  archived?: boolean;
   feeling?: TaskFeeling;
   reflection?: string;
   createdAt: number;
@@ -19,6 +20,7 @@ export interface SparkState {
   isMobileInputOpen: boolean; // Track if mobile input modal is open
   addTask: (content: string, parentId?: string | null) => void;
   completeTask: (id: string, feeling?: TaskFeeling) => void;
+  archiveCompleted: () => void;
   freezeTask: (id: string) => void;
   unfreezeTask: (id: string) => void;
   deleteTask: (id: string) => void;

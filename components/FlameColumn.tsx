@@ -64,41 +64,41 @@ export const FlameColumn: React.FC = () => {
   }, [heatDays]);
 
   const getHeatStyle = (count: number) => {
-    // GitHub-like gradient, with transparent fills and colored borders
+    // GitHub-like gradient, transparent fills + brighter borders for visibility
     if (count === 0) {
       return {
-        borderColor: '#1f1f1f',
-        backgroundColor: 'rgba(31,31,31,0.35)',
+        borderColor: '#2f323a',
+        backgroundColor: 'rgba(47,50,58,0.55)',
       };
     }
     if (count === 1) {
       return {
         borderColor: '#5a4a23',
-        backgroundColor: 'rgba(90,74,35,0.2)',
+        backgroundColor: 'rgba(90,74,35,0.4)',
       };
     }
     if (count === 2) {
       return {
         borderColor: '#8c6b1f',
-        backgroundColor: 'rgba(140,107,31,0.2)',
+        backgroundColor: 'rgba(140,107,31,0.4)',
       };
     }
     if (count === 3) {
       return {
         borderColor: '#b88c24',
-        backgroundColor: 'rgba(184,140,36,0.2)',
+        backgroundColor: 'rgba(184,140,36,0.45)',
       };
     }
     if (count === 4) {
       return {
         borderColor: '#e7c34a',
-        backgroundColor: 'rgba(231,195,74,0.2)',
+        backgroundColor: 'rgba(231,195,74,0.5)',
       };
     }
     return {
       borderColor: '#ff4d4d',
-      backgroundColor: 'rgba(255,77,77,0.18)',
-      boxShadow: '0 0 8px rgba(255,77,77,0.45)',
+      backgroundColor: 'rgba(255,77,77,0.45)',
+      boxShadow: '0 0 10px rgba(255,77,77,0.55)',
     };
   };
 
@@ -124,10 +124,6 @@ export const FlameColumn: React.FC = () => {
 
   return (
     <div className="h-full bg-retro-bg flex flex-col items-center font-mono border-l-2 border-retro-surface relative overflow-hidden">
-      {/* Background Grid - Red Tint */}
-      <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none"
-        style={{ backgroundImage: 'linear-gradient(#ff3333 1px, transparent 1px), linear-gradient(90deg, #ff3333 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-      </div>
 
       <div className="p-4 w-full z-10 border-b-2 border-retro-surface bg-retro-bg flex justify-between items-center">
         <h2 className="text-retro-red text-xs font-bold uppercase tracking-widest flex items-center gap-2">

@@ -17,6 +17,7 @@ export const useSparkStore = create<SparkState>()(
           status: 'active',
           parentId: parentId || null,
           createdAt: Date.now(),
+          archived: false,
         };
         set((state) => ({
           tasks: [...state.tasks, newTask],
@@ -29,6 +30,14 @@ export const useSparkStore = create<SparkState>()(
             task.id === id
               ? { ...task, status: 'completed', completedAt: Date.now(), feeling }
               : task
+          ),
+        }));
+      },
+
+      archiveCompleted: () => {
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.status === 'completed' ? { ...task, archived: true } : task
           ),
         }));
       },

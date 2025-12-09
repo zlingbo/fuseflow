@@ -43,23 +43,25 @@ const TaskChain: React.FC<{ task: SparkNode; allTasks: SparkNode[]; depth?: numb
 };
 
 export const FlowColumn: React.FC = () => {
-  const { tasks, addTask, activePopoverId, isMobileInputOpen, setMobileInputOpen } = useSparkStore();
+  const { tasks, addTask, archiveCompleted, activePopoverId, isMobileInputOpen, setMobileInputOpen } = useSparkStore();
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const rootTasks = tasks
+  const visibleTasks = tasks.filter(t => !t.archived);
+
+  const rootTasks = visibleTasks
     .filter(t => t.status !== 'frozen')
-    .filter(t => { if (!t.parentId) return true; const parent = tasks.find(p => p.id === t.parentId); return !parent || parent.status === 'frozen'; })
+    .filter(t => { if (!t.parentId) return true; const parent = visibleTasks.find(p => p.id === t.parentId); return !parent || parent.status === 'frozen'; })
     .sort((a, b) => {
-      const aActive = isChainActive(a.id, tasks);
-      const bActive = isChainActive(b.id, tasks);
+      const aActive = isChainActive(a.id, visibleTasks);
+      const bActive = isChainActive(b.id, visibleTasks);
       if (aActive && !bActive) return 1;
       if (!aActive && bActive) return -1;
       return (a.completedAt ?? a.createdAt) - (b.completedAt ?? b.createdAt);
     });
 
-  useEffect(() => { if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' }); }, [tasks.length, rootTasks.length]);
+  useEffect(() => { if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' }); }, [visibleTasks.length, rootTasks.length]);
 
   const handleMainSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,10 +82,19 @@ export const FlowColumn: React.FC = () => {
            <Zap size={16} />
            &gt;_ EXECUTION_LOG
          </h2>
-         <div className="flex gap-1">
-           <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse"></div>
-           <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-75"></div>
-           <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-150"></div>
+         <div className="flex items-center gap-3">
+           <button
+             onClick={archiveCompleted}
+             className="text-[10px] uppercase tracking-widest text-retro-amber hover:text-retro-cyan transition-colors border border-retro-amber/50 px-2 py-1 rounded-sm"
+             title="Archive completed tasks (kept for dump)"
+           >
+             ARCHIVE
+           </button>
+           <div className="flex gap-1">
+             <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse"></div>
+             <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-75"></div>
+             <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-150"></div>
+           </div>
          </div>
       </div>
 
@@ -106,7 +117,7 @@ export const FlowColumn: React.FC = () => {
                </div>
             </motion.div>
           ) : (
-            rootTasks.map((task) => <TaskChain key={task.id} task={task} allTasks={tasks} />)
+            rootTasks.map((task) => <TaskChain key={task.id} task={task} allTasks={visibleTasks} />)
           )}
         </AnimatePresence>
         <div ref={bottomRef} className="h-4" /> 
