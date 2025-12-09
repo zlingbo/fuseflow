@@ -47,8 +47,10 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
   const isCompleted = task.status === 'completed';
-  const dragCompleteThreshold = 90;
-  const dragFreezeThreshold = -90;
+  const dragCompleteThreshold = 60;
+  const dragFreezeThreshold = -60;
+  const velocityCompleteThreshold = 500;
+  const velocityFreezeThreshold = -500;
   const shakeTimer = useRef<number | null>(null);
   const longPressTimer = useRef<number | null>(null);
   const LONG_PRESS_MS = 550;
@@ -316,7 +318,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         style={{ x, opacity, touchAction: 'pan-y' }}
         drag="x"
         dragConstraints={{ left: isCompleted ? 0 : -200, right: 200 }}
-        dragElastic={{ left: isCompleted ? 0 : 0.5, right: 0.5 }}
+        dragElastic={{ left: isCompleted ? 0 : 0.8, right: 0.55 }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
@@ -324,18 +326,20 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         onDoubleClick={handleDoubleClick}
         onDragStart={clearLongPress}
         onDragEnd={(e, info) => { 
-          if (info.offset.x < dragFreezeThreshold && !isCompleted) { 
+          const shouldFreeze = !isCompleted && (info.offset.x < dragFreezeThreshold || info.velocity.x < velocityFreezeThreshold);
+          const shouldComplete = info.offset.x > dragCompleteThreshold || info.velocity.x > velocityCompleteThreshold;
+          if (shouldFreeze) { 
             playFreezeSound(); 
             freezeTask(task.id); 
-          } else if (info.offset.x > dragCompleteThreshold) {
-             if (!isCompleted) {
-               const target = e.target as HTMLElement;
-               const rect = target.getBoundingClientRect();
-               triggerConfetti(rect);
-               playSuccessSound();
-               completeTask(task.id, '🙂');
-             }
-             setShowNextInput(true);
+          } else if (shouldComplete) {
+            if (!isCompleted) {
+              const target = e.target as HTMLElement;
+              const rect = target.getBoundingClientRect();
+              triggerConfetti(rect);
+              playSuccessSound();
+              completeTask(task.id, '🙂');
+            }
+            setShowNextInput(true);
           }
           animate(x, 0, { type: 'spring', stiffness: 380, damping: 32 });
         }}
