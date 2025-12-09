@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { FlowColumn } from './components/FlowColumn';
 import { FreezerColumn } from './components/FreezerColumn';
 import { FlameColumn } from './components/FlameColumn';
@@ -85,10 +86,11 @@ const App: React.FC = () => {
           className="md:hidden fixed bottom-0 left-0 right-0 bg-retro-bg border-t-2 border-retro-amber flex items-center z-50 px-2 gap-2"
           style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))', height: '92px' }}
         >
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.92 }}
             onClick={() => setActiveTab('freezer')}
             className={cn(
-              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg", 
+              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg active:bg-zinc-800", 
               activeTab === 'freezer' 
                 ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan shadow-[0_0_10px_rgba(0,255,153,0.35)]" 
                 : "border-retro-surface text-gray-600 hover:border-retro-cyan/50"
@@ -97,12 +99,13 @@ const App: React.FC = () => {
           >
             <Snowflake size={20} />
             <span className="text-[11px] uppercase font-bold mt-1 tracking-widest">Freeze</span>
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.92 }}
             onClick={() => setActiveTab('flow')}
             className={cn(
-              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg", 
+              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg active:bg-zinc-800", 
               activeTab === 'flow' 
                 ? "border-retro-amber bg-retro-amber/10 text-retro-amber shadow-[0_0_10px_rgba(255,176,0,0.35)]" 
                 : "border-retro-surface text-gray-600 hover:border-retro-amber/50"
@@ -111,12 +114,13 @@ const App: React.FC = () => {
           >
             <Zap size={20} />
             <span className="text-[11px] uppercase font-bold mt-1 tracking-widest">Flow</span>
-          </button>
+          </motion.button>
           
-          <button 
+          <motion.button 
+            whileTap={{ scale: 0.92 }}
             onClick={() => setActiveTab('flame')}
             className={cn(
-              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg relative", 
+              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg relative active:bg-zinc-800", 
               activeTab === 'flame' 
                 ? "border-retro-red bg-retro-red/10 text-retro-red shadow-[0_0_10px_rgba(255,51,51,0.35)]" 
                 : "border-retro-surface text-gray-600 hover:border-retro-red/50"
@@ -132,7 +136,7 @@ const App: React.FC = () => {
               )}
             </div>
             <span className="text-[11px] uppercase font-bold mt-1 tracking-widest">Heat</span>
-          </button>
+          </motion.button>
         </div>
       )}
     </div>

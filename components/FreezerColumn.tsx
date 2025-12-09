@@ -112,6 +112,8 @@ export const FreezerColumn: React.FC = () => {
               const progress = task.id === swipeId ? Math.min(Math.abs(swipeX) / 120, 1) : 0;
               return (
                 <motion.div
+                  layout
+                  transition={{ layout: { type: "spring", damping: 25, stiffness: 300 } }}
                   key={task.id}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="group relative p-3 border-2 border-retro-cyan/60 bg-[#071018] overflow-hidden cursor-pointer font-mono shadow-[0_0_12px_rgba(0,255,255,0.2)] hover:shadow-[0_0_18px_rgba(0,255,255,0.35)] transition-all touch-pan-y"

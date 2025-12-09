@@ -236,13 +236,14 @@ export const FlameColumn: React.FC = () => {
 
       {/* Footer */}
       <div className="w-full p-5 border-t border-retro-surface bg-retro-bg z-10">
-        <button
+        <motion.button
+          whileTap={{ scale: 0.92 }}
           onClick={handleExport}
-          className="group w-full border-2 border-dashed border-gray-700 hover:border-retro-red p-3 flex items-center justify-center gap-2 text-gray-500 hover:text-retro-red transition-all hover:bg-retro-red/5"
+          className="group w-full border-2 border-dashed border-gray-700 hover:border-retro-red p-3 flex items-center justify-center gap-2 text-gray-500 hover:text-retro-red transition-all hover:bg-retro-red/5 active:bg-zinc-800"
         >
           <Download size={16} />
           <span className="text-xs font-bold uppercase tracking-widest group-hover:animate-pulse">DUMP_MEMORY</span>
-        </button>
+        </motion.button>
         <p className="text-[9px] text-gray-800 text-center mt-2 uppercase font-mono">
           v1.0.4 // SPARK_OS
         </p>

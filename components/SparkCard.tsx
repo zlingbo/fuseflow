@@ -33,6 +33,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const [contentVal, setContentVal] = useState(task.content);
   const [isShaking, setIsShaking] = useState(false);
   const [shakeProfile, setShakeProfile] = useState({ scaleAmp: 0.03, rotAmp: 0.8, duration: 0.28 });
+  const [completeFlash, setCompleteFlash] = useState(false);
 
   const showFeelingSelector = activePopoverId === task.id;
 
@@ -42,6 +43,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const popoverRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const reflectionFormRef = useRef<HTMLDivElement>(null);
+  const completeFlashTimer = useRef<number | null>(null);
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
   const isCompleted = task.status === 'completed';
@@ -100,6 +102,9 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       }
       if (longPressTimer.current) {
         clearTimeout(longPressTimer.current);
+      }
+      if (completeFlashTimer.current) {
+        clearTimeout(completeFlashTimer.current);
       }
     };
   }, []);
@@ -168,6 +173,11 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
   const handleComplete = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!isCompleted) {
+      if (completeFlashTimer.current) {
+        clearTimeout(completeFlashTimer.current);
+      }
+      setCompleteFlash(true);
+      completeFlashTimer.current = window.setTimeout(() => setCompleteFlash(false), 200);
       const rect = e.currentTarget.getBoundingClientRect();
       triggerConfetti(rect);
       playSuccessSound();
@@ -284,6 +294,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       </motion.div>
 
       <motion.div
+        layout
         initial={isNew ? { opacity: 0 } : false}
         animate={
           isShaking
@@ -295,7 +306,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
             : { opacity: 1, scale: 1, rotate: 0 }
         }
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
-        transition={{ opacity: { duration: 0.1 }, scale: { duration: shakeProfile.duration }, rotate: { duration: shakeProfile.duration } }}
+        transition={{
+          layout: { type: "spring", damping: 25, stiffness: 300 },
+          opacity: { duration: 0.1 },
+          scale: { duration: shakeProfile.duration },
+          rotate: { duration: shakeProfile.duration }
+        }}
         ref={cardRef}
         style={{ x, opacity, touchAction: 'pan-y' }}
         drag="x"
@@ -354,16 +370,18 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
         <div className="relative z-10 flex items-start gap-3">
           {/* ASCII Checkbox */}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.92 }}
             onClick={handleComplete}
             disabled={isCompleted}
             className={cn(
-              "mt-0.5 font-bold text-xl md:text-lg leading-none hover:text-retro-cyan transition-colors min-w-[36px]",
-              isCompleted ? "text-retro-cyan" : "text-retro-amber"
+              "mt-0.5 font-bold text-xl md:text-lg leading-none hover:text-retro-cyan transition-colors min-w-[36px] active:bg-zinc-800 rounded-sm",
+              isCompleted ? "text-retro-cyan" : "text-retro-amber",
+              completeFlash && "text-amber-500"
             )}
           >
             {isCompleted ? "[x]" : "[ ]"}
-          </button>
+          </motion.button>
 
           <div className="flex-1 min-w-0">
             {isEditingContent ? (
@@ -379,17 +397,24 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                 />
               </form>
             ) : (
-              <p 
+              <motion.p
+                initial={{ textDecorationColor: 'rgba(245,158,11,0)' }}
+                animate={{
+                  textDecorationColor: isCompleted ? 'currentColor' : 'rgba(245,158,11,0)',
+                  opacity: isCompleted ? 0.55 : 1
+                }}
+                transition={{ duration: 0.18 }}
+                style={{ textDecorationThickness: '2px' }}
                 onClick={() => !isCompleted && setIsEditingContent(true)}
                 className={cn(
                   "text-sm leading-relaxed break-words cursor-text font-bold transition-all",
                   // Add Glitch Effect on Hover for active tasks
                   !isCompleted && "hover:text-retro-cyan glitch-hover",
-                  isCompleted && "line-through opacity-50 decoration-2"
+                  isCompleted && "line-through decoration-2"
                 )}
               >
                 {task.content}
-              </p>
+              </motion.p>
             )}
             
             {/* Tech Metadata */}
@@ -409,14 +434,15 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
               {isCompleted && (
                 <div className="relative inline-block ml-auto">
-                  <button 
+                  <motion.button 
+                    whileTap={{ scale: 0.92 }}
                     onClick={(e) => { e.stopPropagation(); setActivePopoverId(showFeelingSelector ? null : task.id); }}
                     className={cn(
                       "hover:text-retro-cyan hover:underline transition-colors grayscale-[0.5] hover:grayscale-0",
                     )}
                   >
                       MOOD: {task.feeling || '🙂'}
-                  </button>
+                  </motion.button>
                   
                   <AnimatePresence>
                     {showFeelingSelector && (
@@ -426,13 +452,14 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                         className="absolute bottom-full right-0 mb-1 bg-black border-2 border-retro-cyan shadow-[4px_4px_0_0_rgba(0,255,153,0.3)] p-1 flex gap-1 z-50 min-w-max"
                       >
                         {(['😐', '🙂', '🤩'] as TaskFeeling[]).map((f) => (
-                          <button
+                          <motion.button
+                            whileTap={{ scale: 0.92 }}
                             key={f}
                             onClick={(e) => { e.stopPropagation(); updateTaskFeeling(task.id, f); setActivePopoverId(null); }}
-                            className={cn("p-1 hover:bg-retro-cyan hover:text-black transition-colors", task.feeling === f ? "bg-retro-cyan/20" : "")}
+                            className={cn("p-1 hover:bg-retro-cyan hover:text-black transition-colors active:bg-zinc-800", task.feeling === f ? "bg-retro-cyan/20" : "")}
                           >
                             {f}
-                          </button>
+                          </motion.button>
                         ))}
                       </motion.div>
                     )}
@@ -464,8 +491,21 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReflectionSubmit(e); }}}
                 />
                 <div className="flex justify-end gap-2">
-                  <button type="button" onClick={() => setIsEditingReflection(false)} className="text-[10px] uppercase text-retro-green/50 hover:text-retro-green">Esc</button>
-                  <button type="submit" className="text-[10px] uppercase bg-retro-green text-black px-2 font-bold hover:bg-white">Commit</button>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    type="button"
+                    onClick={() => setIsEditingReflection(false)}
+                    className="text-[10px] uppercase text-retro-green/50 hover:text-retro-green active:bg-zinc-800 px-1 rounded-sm"
+                  >
+                    Esc
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
+                    type="submit"
+                    className="text-[10px] uppercase bg-retro-green text-black px-2 font-bold hover:bg-white active:bg-zinc-800 rounded-sm"
+                  >
+                    Commit
+                  </motion.button>
                 </div>
               </motion.form>
             )}
@@ -479,51 +519,56 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                 isCompleted ? "flex flex-col gap-2" : "grid grid-cols-2 gap-2"
               )}
             >
-              <button
+              <motion.button
+                whileTap={{ scale: 0.92 }}
                 onClick={() => setIsEditingReflection(!isEditingReflection)}
-                className="text-gray-600 hover:text-retro-green p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                className="text-gray-600 hover:text-retro-green p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0 active:bg-zinc-800"
                 title="Comment"
                 aria-label="添加备注"
               >
                 <MessageSquare size={16} />
-              </button>
+              </motion.button>
 
               {!isCompleted ? (
                 <>
-                  <button
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
                     onClick={handleSplit}
-                    className="text-gray-600 hover:text-retro-amber p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                    className="text-gray-600 hover:text-retro-amber p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0 active:bg-zinc-800"
                     title="Split"
                     aria-label="拆分任务"
                   >
                     <Hammer size={16} />
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
                     onClick={() => { playFreezeSound(); freezeTask(task.id); }}
-                    className="text-gray-600 hover:text-retro-cyan p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                    className="text-gray-600 hover:text-retro-cyan p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0 active:bg-zinc-800"
                     title="Freeze"
                     aria-label="冻结任务"
                   >
                     <Snowflake size={16} />
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.92 }}
                     onClick={() => deleteTask(task.id)}
-                    className="text-gray-600 hover:text-retro-red p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                    className="text-gray-600 hover:text-retro-red p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0 active:bg-zinc-800"
                     title="Delete"
                     aria-label="删除任务"
                   >
                     <Trash2 size={16} />
-                  </button>
+                  </motion.button>
                 </>
               ) : (
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
                   onClick={() => setShowNextInput(true)}
-                  className="text-gray-600 hover:text-retro-cyan p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                  className="text-gray-600 hover:text-retro-cyan p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0 active:bg-zinc-800"
                   title="Continue"
                   aria-label="继续添加子任务"
                 >
                   <CornerDownRight size={16} />
-                </button>
+                </motion.button>
               )}
             </div>
           )}
@@ -547,7 +592,13 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                 className="flex-1 bg-black text-xs text-white focus:outline-none font-mono caret-retro-cyan"
                 onBlur={() => !nextInputVal && setShowNextInput(false)}
               />
-              <button type="submit" className="text-[10px] bg-retro-amber text-black px-1 font-bold">EXEC</button>
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                type="submit"
+                className="text-[10px] bg-retro-amber text-black px-1 font-bold active:bg-zinc-800 rounded-sm"
+              >
+                EXEC
+              </motion.button>
             </motion.form>
           )}
         </AnimatePresence>

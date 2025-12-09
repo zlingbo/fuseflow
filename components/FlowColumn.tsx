@@ -25,12 +25,21 @@ const TaskChain: React.FC<{ task: SparkNode; allTasks: SparkNode[]; depth?: numb
 
   return (
     <motion.div 
+      layout
+      transition={{ layout: { type: "spring", damping: 25, stiffness: 300 } }}
       className="flex flex-col gap-2 group"
       style={{ zIndex: shouldBoost ? 50 : 'auto', position: 'relative' }}
     >
       <SparkCard task={task} isChild={depth > 0} />
       {children.length > 0 && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="pl-6 ml-2 border-l-2 border-gray-800 flex flex-col gap-2">
+        <motion.div
+          layout
+          transition={{ layout: { type: "spring", damping: 25, stiffness: 300 } }}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="pl-6 ml-2 border-l-2 border-gray-800 flex flex-col gap-2"
+        >
           <AnimatePresence mode="popLayout" initial={false}>
             {children.map(child => <TaskChain key={child.id} task={child} allTasks={allTasks} depth={depth + 1} />)}
           </AnimatePresence>
@@ -81,13 +90,14 @@ export const FlowColumn: React.FC = () => {
            &gt;_ EXECUTION_LOG
          </h2>
          <div className="flex items-center gap-3">
-           <button
+          <motion.button
+            whileTap={{ scale: 0.92 }}
              onClick={archiveCompleted}
-             className="text-xs md:text-[10px] uppercase tracking-widest text-retro-amber hover:text-retro-cyan transition-colors border border-retro-amber/50 px-3 py-2 md:px-2 md:py-1 rounded md:rounded-sm"
+            className="text-xs md:text-[10px] uppercase tracking-widest text-retro-amber hover:text-retro-cyan transition-colors border border-retro-amber/50 px-3 py-2 md:px-2 md:py-1 rounded md:rounded-sm active:bg-zinc-800"
              title="Archive completed tasks (kept for dump)"
            >
              ARCHIVE
-           </button>
+          </motion.button>
            <div className="flex gap-1">
              <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse"></div>
              <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-75"></div>
@@ -123,7 +133,10 @@ export const FlowColumn: React.FC = () => {
 
       {/* Desktop Input - CLI Style */}
       <div className="hidden md:block px-4 pt-2 pb-4 z-30 bg-retro-bg border-t-2 border-retro-surface flex-none">
-        <form onSubmit={handleMainSubmit} className="flex gap-2 items-center bg-black border-2 border-retro-amber p-2 shadow-[4px_4px_0_0_#996900] group focus-within:shadow-[4px_4px_0_0_#ffb000] transition-shadow">
+        <form
+          onSubmit={handleMainSubmit}
+          className="flex gap-2 items-center bg-black border-2 border-retro-amber p-2 shadow-[4px_4px_0_0_#996900] group transition-shadow focus-within:border-amber-500/50 focus-within:shadow-[4px_4px_0_0_#ffb000,0_0_15px_rgba(245,158,11,0.1)]"
+        >
           <span className="text-retro-cyan font-bold animate-pulse">&gt;</span>
           <input
             type="text"
@@ -142,9 +155,9 @@ export const FlowColumn: React.FC = () => {
         {!isMobileInputOpen && (
           <motion.button
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            whileTap={{ y: 2 }}
+            whileTap={{ scale: 0.92 }}
             onClick={() => setMobileInputOpen(true)}
-            className="md:hidden fixed right-5 z-50 w-14 h-14 bg-retro-amber text-black border-2 border-retro-amber shadow-[0_0_15px_rgba(255,176,0,0.6)] flex items-center justify-center transition-all rounded-3xl hover:shadow-[0_0_25px_rgba(255,176,0,0.8)]"
+            className="md:hidden fixed right-5 z-50 w-14 h-14 bg-retro-amber text-black border-2 border-retro-amber shadow-[0_0_15px_rgba(255,176,0,0.6)] flex items-center justify-center transition-all rounded-3xl hover:shadow-[0_0_25px_rgba(255,176,0,0.8)] active:bg-zinc-800"
             style={{ bottom: 'calc(108px + env(safe-area-inset-bottom))' }}
             aria-label="创建新任务"
           >
@@ -165,7 +178,7 @@ export const FlowColumn: React.FC = () => {
               style={{ paddingBottom: 'max(28px, env(safe-area-inset-bottom))' }} 
             >
               <form onSubmit={handleMainSubmit} className="flex gap-3 items-stretch w-full">
-                <div className="flex-1 flex gap-2 items-center bg-black border-2 border-retro-amber p-3.5 shadow-[4px_4px_0_0_#996900] rounded-xl">
+                <div className="flex-1 flex gap-2 items-center bg-black border-2 border-retro-amber p-3.5 shadow-[4px_4px_0_0_#996900] rounded-xl transition-shadow focus-within:border-amber-500/50 focus-within:shadow-[4px_4px_0_0_#996900,0_0_15px_rgba(245,158,11,0.1)]">
                    <span className="text-retro-cyan font-bold">&gt;</span>
                    <input
                     ref={inputRef}
@@ -178,14 +191,15 @@ export const FlowColumn: React.FC = () => {
                   />
                   <div className="w-2 h-4 bg-retro-amber animate-pulse-fast" />
                 </div>
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.92 }}
                   type="submit"
                   disabled={!inputValue.trim()}
-                  className="bg-retro-cyan text-black border-2 border-white px-4 min-w-[58px] shadow-[4px_4px_0_0_#fff] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 rounded-xl flex items-center justify-center"
+                  className="bg-retro-cyan text-black border-2 border-white px-4 min-w-[58px] shadow-[4px_4px_0_0_#fff] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 rounded-xl flex items-center justify-center active:bg-zinc-800"
                   aria-label="提交任务"
                 >
                   <SendHorizontal size={24} />
-                </button>
+                </motion.button>
               </form>
             </motion.div>
           </>
