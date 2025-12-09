@@ -1,17 +1,29 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Flame, Activity, Download, Cpu } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { motion } from 'framer-motion';
 import { cn } from '../utils';
 
+type HeatDay = { ts: number; count: number };
+
 export const FlameColumn: React.FC = () => {
   const { tasks } = useSparkStore();
-  
+
   const today = new Date().setHours(0, 0, 0, 0);
   const completedToday = tasks.filter(
     (t) => t.status === 'completed' && t.completedAt && t.completedAt > today
   ).length;
   const totalCompleted = tasks.filter((t) => t.status === 'completed').length;
+  const completedByDay = useMemo(() => {
+    const map = new Map<number, number>();
+    tasks.forEach((t) => {
+      if (t.status === 'completed' && t.completedAt) {
+        const dayStart = new Date(t.completedAt).setHours(0, 0, 0, 0);
+        map.set(dayStart, (map.get(dayStart) || 0) + 1);
+      }
+    });
+    return map;
+  }, [tasks]);
 
   const maxHeat = 8; // Target daily tasks
   const heatPercentage = Math.min((completedToday / maxHeat) * 100, 100);
@@ -28,6 +40,69 @@ export const FlameColumn: React.FC = () => {
     'text-retro-red', // 4
     'text-white drop-shadow-[0_0_10px_rgba(255,51,51,1)]', // 5
   ];
+
+  const heatDays = useMemo<HeatDay[]>(() => {
+    const days = 28;
+    const oneDay = 24 * 60 * 60 * 1000;
+    const arr: HeatDay[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const dayStart = new Date(Date.now() - i * oneDay).setHours(0, 0, 0, 0);
+      arr.push({
+        ts: dayStart,
+        count: completedByDay.get(dayStart) || 0,
+      });
+    }
+    return arr;
+  }, [completedByDay]);
+
+  const heatWeeks = useMemo<HeatDay[][]>(() => {
+    const weeks: HeatDay[][] = [];
+    for (let i = 0; i < heatDays.length; i += 7) {
+      weeks.push(heatDays.slice(i, i + 7));
+    }
+    return weeks;
+  }, [heatDays]);
+
+  const getHeatStyle = (count: number) => {
+    // GitHub-like gradient, with transparent fills and colored borders
+    if (count === 0) {
+      return {
+        borderColor: '#1f1f1f',
+        backgroundColor: 'rgba(31,31,31,0.35)',
+      };
+    }
+    if (count === 1) {
+      return {
+        borderColor: '#5a4a23',
+        backgroundColor: 'rgba(90,74,35,0.2)',
+      };
+    }
+    if (count === 2) {
+      return {
+        borderColor: '#8c6b1f',
+        backgroundColor: 'rgba(140,107,31,0.2)',
+      };
+    }
+    if (count === 3) {
+      return {
+        borderColor: '#b88c24',
+        backgroundColor: 'rgba(184,140,36,0.2)',
+      };
+    }
+    if (count === 4) {
+      return {
+        borderColor: '#e7c34a',
+        backgroundColor: 'rgba(231,195,74,0.2)',
+      };
+    }
+    return {
+      borderColor: '#ff4d4d',
+      backgroundColor: 'rgba(255,77,77,0.18)',
+      boxShadow: '0 0 8px rgba(255,77,77,0.45)',
+    };
+  };
+
+  const [hoverDay, setHoverDay] = useState<HeatDay | null>(null);
 
   const handleExport = () => {
     try {
@@ -49,9 +124,9 @@ export const FlameColumn: React.FC = () => {
 
   return (
     <div className="h-full bg-retro-bg flex flex-col items-center font-mono border-l-2 border-retro-surface relative overflow-hidden">
-       {/* Background Grid - Red Tint */}
-       <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none" 
-           style={{ backgroundImage: 'linear-gradient(#ff3333 1px, transparent 1px), linear-gradient(90deg, #ff3333 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+      {/* Background Grid - Red Tint */}
+      <div className="absolute inset-0 z-0 opacity-[0.05] pointer-events-none"
+        style={{ backgroundImage: 'linear-gradient(#ff3333 1px, transparent 1px), linear-gradient(90deg, #ff3333 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
       </div>
 
       <div className="p-4 w-full z-10 border-b-2 border-retro-surface bg-retro-bg flex justify-between items-center">
@@ -62,77 +137,104 @@ export const FlameColumn: React.FC = () => {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center w-full gap-4 z-10 p-5 overflow-y-auto">
-        
+
         {/* Pixel Flame Visual */}
         <div className="relative border-4 border-retro-surface bg-black p-3 shadow-hard-sm">
-             {/* "Screen" Effect */}
-             <div className="absolute inset-0 bg-retro-red/10 pointer-events-none" />
-             
-             <motion.div
-                 animate={{
-                     scale: [1, 1.1, 1],
-                     opacity: [0.8, 1, 0.8],
-                 }}
-                 transition={{
-                     duration: 0.2, // Fast glitch flicker
-                     repeat: Infinity,
-                     repeatType: "reverse"
-                 }}
-                 className={`transition-colors duration-1000 ${flameColors[intensity]}`}
-             >
-                 {/* Using standard icon but framing it to look like a sprite */}
-                 <Flame size={64} strokeWidth={2} fill="currentColor" />
-             </motion.div>
+          {/* "Screen" Effect */}
+          <div className="absolute inset-0 bg-retro-red/10 pointer-events-none" />
+
+          <motion.div
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.8, 1, 0.8],
+            }}
+            transition={{
+              duration: 0.2, // Fast glitch flicker
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
+            className={`transition-colors duration-1000 ${flameColors[intensity]}`}
+          >
+            {/* Using standard icon but framing it to look like a sprite */}
+            <Flame size={64} strokeWidth={2} fill="currentColor" />
+          </motion.div>
         </div>
 
-         {/* Big Number Display for SPARKLE_COUNT */}
+        {/* Big Number Display for SPARKLE_COUNT */}
         <div className="relative flex flex-col items-center gap-1.5 mt-3 px-3 py-2 overflow-hidden text-center">
-            {/* Prism/Sparkle layers - Pure white base with intense RGB split edges */}
-            <div className="relative inline-block leading-none text-[clamp(44px,6vw,60px)] font-extrabold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
-              {/* Cyan/Blue Shift */}
-              <motion.span
-                className="absolute inset-0 text-cyan-400 mix-blend-screen select-none"
-                animate={{ x: [-3, 3.5, -2], opacity: [0.7, 0.95, 0.6] }}
-                transition={{ duration: 1.8, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-              >
-                {totalCompleted.toString().padStart(2, '0')}
-              </motion.span>
-              
-              {/* Magenta/Pink Shift */}
-              <motion.span
-                className="absolute inset-0 text-fuchsia-500 mix-blend-screen select-none"
-                animate={{ x: [3, -3.5, 2], opacity: [0.65, 0.95, 0.55] }}
-                transition={{ duration: 2.1, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-              >
-                {totalCompleted.toString().padStart(2, '0')}
-              </motion.span>
+          {/* Prism/Sparkle layers - Pure white base with intense RGB split edges */}
+          <div className="relative inline-block leading-none text-[clamp(44px,6vw,60px)] font-extrabold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+            {/* Cyan/Blue Shift */}
+            <motion.span
+              className="absolute inset-0 text-cyan-400 mix-blend-screen select-none"
+              animate={{ x: [-3, 3.5, -2], opacity: [0.7, 0.95, 0.6] }}
+              transition={{ duration: 1.8, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+            >
+              {totalCompleted.toString().padStart(2, '0')}
+            </motion.span>
 
-              {/* Yellow/Gold Shift (Vertical) */}
-              <motion.span
-                className="absolute inset-0 text-yellow-300 mix-blend-screen select-none"
-                animate={{ y: [-2, 2.5, -1], opacity: [0.55, 0.85, 0.45] }}
-                transition={{ duration: 2.6, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
-              >
-                {totalCompleted.toString().padStart(2, '0')}
-              </motion.span>
+            {/* Magenta/Pink Shift */}
+            <motion.span
+              className="absolute inset-0 text-fuchsia-500 mix-blend-screen select-none"
+              animate={{ x: [3, -3.5, 2], opacity: [0.65, 0.95, 0.55] }}
+              transition={{ duration: 2.1, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+            >
+              {totalCompleted.toString().padStart(2, '0')}
+            </motion.span>
 
-              {/* Base White Text */}
-              <span className="relative text-white z-10">
-                {totalCompleted.toString().padStart(2, '0')}
-              </span>
-            </div>
- 
-            <div className="w-14 border-t border-retro-dim/60" />
-            <div className="text-[10px] text-retro-dim uppercase tracking-[0.25em] drop-shadow-[0_0_6px_rgba(255,72,72,0.35)]">
-              SPARKLE_COUNT
-            </div>
-         </div>
+            {/* Yellow/Gold Shift (Vertical) */}
+            <motion.span
+              className="absolute inset-0 text-yellow-300 mix-blend-screen select-none"
+              animate={{ y: [-2, 2.5, -1], opacity: [0.55, 0.85, 0.45] }}
+              transition={{ duration: 2.6, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+            >
+              {totalCompleted.toString().padStart(2, '0')}
+            </motion.span>
+
+            {/* Base White Text */}
+            <span className="relative text-white z-10">
+              {totalCompleted.toString().padStart(2, '0')}
+            </span>
+          </div>
+
+          <div className="w-14 border-t border-retro-dim/60" />
+          <div className="text-[10px] text-retro-dim uppercase tracking-[0.25em] drop-shadow-[0_0_6px_rgba(255,72,72,0.35)]">
+            SPARKLE_COUNT
+          </div>
+        </div>
+
+        {/* Contribution-style Heat Map */}
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <span className="text-[10px] text-retro-dim uppercase tracking-[0.25em]">HEAT MAP</span>
+          <div className="flex gap-1">
+            {heatWeeks.map((week, wi) => (
+              <div key={wi} className="flex flex-col gap-1">
+                {week.map((day) => (
+                  <div
+                    key={day.ts}
+                    className={cn(
+                      'w-3 h-3 rounded-[2px] border transition-all duration-200 bg-transparent',
+                      hoverDay?.ts === day.ts && 'scale-110'
+                    )}
+                    style={getHeatStyle(day.count)}
+                    onMouseEnter={() => setHoverDay(day)}
+                    onMouseLeave={() => setHoverDay(null)}
+                    title={`${new Date(day.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${day.count}`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="text-[10px] text-retro-dim uppercase tracking-[0.15em]">
+            HOVER_SECTOR_FOR_DATA {hoverDay ? `| ${new Date(hoverDay.ts).toLocaleDateString()} : ${hoverDay.count}` : ''}
+          </div>
+        </div>
 
       </div>
-      
+
       {/* Footer */}
       <div className="w-full p-5 border-t border-retro-surface bg-retro-bg z-10">
-        <button 
+        <button
           onClick={handleExport}
           className="group w-full border-2 border-dashed border-gray-700 hover:border-retro-red p-3 flex items-center justify-center gap-2 text-gray-500 hover:text-retro-red transition-all hover:bg-retro-red/5"
         >
