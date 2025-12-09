@@ -397,7 +397,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
                   value={contentVal}
                   onChange={(e) => setContentVal(e.target.value)}
                   onBlur={handleContentSubmit}
-                  className="w-full bg-black text-retro-cyan focus:outline-none font-mono placeholder-retro-dim/50 caret-retro-cyan select-text"
+                  className="w-full bg-black text-retro-cyan focus:outline-none font-mono placeholder-retro-dim/50 caret-retro-cyan select-text text-base"
                   placeholder="INPUT_COMMAND..."
                 />
               </form>
@@ -412,7 +412,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
                 style={{ textDecorationThickness: '2px' }}
                 onClick={() => !isCompleted && setIsEditingContent(true)}
                 className={cn(
-                  "text-sm leading-relaxed break-words cursor-text font-bold transition-all select-text",
+                  "text-base leading-relaxed break-words cursor-text font-bold transition-all select-text",
                   // Add Glitch Effect on Hover for active tasks
                   !isCompleted && "hover:text-retro-cyan glitch-hover",
                   isCompleted && "line-through decoration-2"
@@ -475,7 +475,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
 
             {/* Reflection: Code Comment Style */}
             {(task.reflection && !isEditingReflection) && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 text-xs text-retro-green/80 font-mono text-glow-green">
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 text-base text-retro-green/80 font-mono text-glow-green">
                 <span className="opacity-50 mr-1">//</span>{task.reflection}
               </motion.div>
             )}
@@ -492,7 +492,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
                     value={reflectionVal}
                     onChange={(e) => setReflectionVal(e.target.value)}
                     placeholder="// ADD_COMMIT_MSG..."
-                    className="w-full text-xs bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30 select-text"
+                    className="w-full text-base bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30 select-text"
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReflectionSubmit(e); }}}
                 />
                 <div className="flex justify-end gap-2">
@@ -582,19 +582,19 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
         {/* Next Step CLI Input */}
         <AnimatePresence>
           {showNextInput && (
-            <motion.form
+              <motion.form
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
               onSubmit={handleNextInputSubmit}
-              className="mt-2 border-t border-dashed border-gray-800 pt-2 flex items-center gap-2"
+                className="mt-2 border-t border-dashed border-gray-800 pt-2 flex items-center gap-2"
             >
-              <span className="text-retro-cyan text-xs">GO_TO &gt;</span>
+                <span className="text-retro-cyan text-base leading-tight">GO_TO &gt;</span>
               <input
                 ref={inputRef}
                 type="text"
                 value={nextInputVal}
                 onChange={(e) => setNextInputVal(e.target.value)}
                 placeholder="NEXT_ACTION..."
-                  className="flex-1 bg-black text-xs text-white focus:outline-none font-mono caret-retro-cyan select-text"
+                  className="flex-1 bg-black text-base text-white focus:outline-none font-mono caret-retro-cyan select-text"
                 onBlur={() => !nextInputVal && setShowNextInput(false)}
               />
               <motion.button

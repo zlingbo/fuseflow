@@ -178,7 +178,7 @@ export const FlowColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="sentences"
-            className="flex-1 bg-black text-retro-amber placeholder-retro-amber/30 focus:outline-none font-mono select-text text-base"
+              className="flex-1 bg-black text-retro-amber placeholder-retro-amber/30 focus:outline-none font-mono select-text text-base"
               autoFocus
             />
             <div className="w-2 h-4 bg-retro-amber animate-pulse-fast" />

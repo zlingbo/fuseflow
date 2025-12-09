@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Flame, Activity, Download, Cpu } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { motion } from 'framer-motion';
@@ -107,6 +107,7 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isTouch, setIsTouch] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const heatmapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const touchCapable = typeof window !== 'undefined' && (
@@ -122,7 +123,7 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
     setSelectedIndex(index);
   };
 
-  const handleSwipeMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+  const handleSwipeMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
     if (heatDays.length === 0) return;
     const baseIndex = selectedIndex ?? heatDays.length - 1;
     const row = baseIndex % 7;
@@ -138,9 +139,62 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
     if (nextDay) {
       setActiveSelection(nextDay, nextIndex);
     }
-  };
+  }, [heatDays, heatWeeks.length, selectedIndex]);
 
   const displayDay = isTouch ? selectedDay : hoverDay ?? selectedDay;
+
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent | TouchEvent) => {
+      if (!selectedDay && selectedIndex === null) return;
+      const target = e.target as Node | null;
+      if (heatmapRef.current && target && heatmapRef.current.contains(target)) return;
+      setSelectedDay(null);
+      setSelectedIndex(null);
+    };
+    document.addEventListener('click', handleGlobalClick, true);
+    document.addEventListener('touchstart', handleGlobalClick, true);
+    return () => {
+      document.removeEventListener('click', handleGlobalClick, true);
+      document.removeEventListener('touchstart', handleGlobalClick, true);
+    };
+  }, [selectedDay, selectedIndex]);
+
+  useEffect(() => {
+    if (!isTouch) return;
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      touchStartRef.current = null;
+
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      const threshold = 24;
+      if (Math.max(absX, absY) < threshold) return;
+
+      if (absX > absY) {
+        handleSwipeMove(dx < 0 ? 'left' : 'right');
+      } else {
+        handleSwipeMove(dy < 0 ? 'up' : 'down');
+      }
+    };
+    const handleTouchCancel = () => {
+      touchStartRef.current = null;
+    };
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchcancel', handleTouchCancel);
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchCancel);
+    };
+  }, [isTouch, handleSwipeMove]);
 
   const handleExport = () => {
     try {
@@ -239,35 +293,11 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
 
         {/* Contribution-style Heat Map */}
         <div
+          ref={heatmapRef}
           className="mt-4 flex flex-col items-center gap-2"
           onClick={() => {
-            if (isTouch) {
-              setSelectedDay(null);
-              setSelectedIndex(null);
-            }
-          }}
-          onTouchStart={(e) => {
-            if (!isTouch) return;
-            const touch = e.touches[0];
-            touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-          }}
-          onTouchEnd={(e) => {
-            if (!isTouch || !touchStartRef.current) return;
-            const touch = e.changedTouches[0];
-            const dx = touch.clientX - touchStartRef.current.x;
-            const dy = touch.clientY - touchStartRef.current.y;
-            touchStartRef.current = null;
-
-            const absX = Math.abs(dx);
-            const absY = Math.abs(dy);
-            const threshold = 24;
-            if (Math.max(absX, absY) < threshold) return;
-
-            if (absX > absY) {
-              handleSwipeMove(dx < 0 ? 'left' : 'right');
-            } else {
-              handleSwipeMove(dy < 0 ? 'up' : 'down');
-            }
+            setSelectedDay(null);
+            setSelectedIndex(null);
           }}
         >
           <span className="text-[10px] text-retro-dim uppercase tracking-[0.25em]">HEAT MAP</span>
@@ -277,14 +307,22 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
                 {week.map((day, di) => {
                   const dayIndex = wi * 7 + di;
                   const isActive = displayDay?.ts === day.ts;
+                  const baseStyle = getHeatStyle(day.count);
+                  const activeStyle = isActive
+                    ? {
+                      outline: '2px solid #ff4d4d',
+                      outlineOffset: '1px',
+                      boxShadow: `${baseStyle.boxShadow ? baseStyle.boxShadow + ', ' : ''}0 0 14px rgba(255,77,77,0.8)`,
+                    }
+                    : {};
                   return (
                     <div
                       key={day.ts}
                       className={cn(
                         'w-4 h-4 md:w-3 md:h-3 rounded-[3px] md:rounded-[2px] border transition-all duration-150 bg-transparent',
-                        (hoverDay?.ts === day.ts || isActive) && 'scale-110'
+                        (hoverDay?.ts === day.ts || isActive) && 'scale-110 ring-2 ring-retro-red shadow-[0_0_10px_rgba(255,77,77,0.65)]'
                       )}
-                      style={getHeatStyle(day.count)}
+                      style={{ ...baseStyle, ...activeStyle }}
                       onMouseEnter={() => setHoverDay(day)}
                       onMouseLeave={() => setHoverDay(null)}
                       onClick={(e) => {
