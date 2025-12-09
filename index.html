@@ -1,120 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spark | Terminal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              mono: ['"Space Mono"', 'monospace'],
-              sans: ['"Space Mono"', 'monospace'], // Force mono everywhere
-            },
-            colors: {
-              retro: {
-                bg: '#18181b', // Lighter background (Zinc-900ish)
-                surface: '#27272a',
-                amber: '#ffb000',
-                amberDim: '#996900',
-                cyan: '#00ff99',
-                red: '#ff3333',
-                green: '#4ade80', // Terminal Green
-                dim: '#71717a', // Zinc-500
-              }
-            },
-            boxShadow: {
-              'hard-sm': '2px 2px 0 0 rgba(0,0,0,0.5)',
-            },
-            animation: {
-              'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spark | Terminal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Space Mono"', 'monospace'],
+            sans: ['"Space Mono"', 'monospace'], // Force mono everywhere
+          },
+          colors: {
+            retro: {
+              bg: '#18181b', // Lighter background (Zinc-900ish)
+              surface: '#27272a',
+              amber: '#ffb000',
+              amberDim: '#996900',
+              cyan: '#00ff99',
+              red: '#ff3333',
+              green: '#4ade80', // Terminal Green
+              dim: '#71717a', // Zinc-500
             }
           },
+          boxShadow: {
+            'hard-sm': '2px 2px 0 0 rgba(0,0,0,0.5)',
+          },
+          animation: {
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
         },
-      }
-    </script>
-    <style>
-      :root {
-        --c-bg: #18181b;
-        --c-amber: #ffb000;
-        --c-cyan: #00ff99;
+      },
+    }
+  </script>
+  <style>
+    :root {
+      --c-bg: #18181b;
+      --c-amber: #ffb000;
+      --c-cyan: #00ff99;
+    }
+
+    body {
+      background-color: var(--c-bg);
+      color: var(--c-amber);
+      font-family: 'Space Mono', monospace;
+      overflow: hidden;
+      /* App handles scrolling */
+    }
+
+    /* CRT Effects - Refined for Clarity */
+    .scanlines {
+      background: linear-gradient(to bottom,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0) 50%,
+          rgba(0, 0, 0, 0.03) 50%,
+          /* Reduced opacity massively for readability */
+          rgba(0, 0, 0, 0.03));
+      background-size: 100% 3px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* CRT Vignette - Push to edges only */
+    .vignette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, 0.5) 100%);
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* Glitch Effect on Hover - Micro movements only */
+    .glitch-hover:hover {
+      animation: glitch-anim 0.3s infinite;
+    }
+
+    @keyframes glitch-anim {
+      0% {
+        transform: translate(0)
       }
 
-      body {
-        background-color: var(--c-bg);
-        color: var(--c-amber);
-        font-family: 'Space Mono', monospace;
-        overflow: hidden; /* App handles scrolling */
-      }
-      
-      /* CRT Effects - Refined for Clarity */
-      .scanlines {
-        background: linear-gradient(
-          to bottom,
-          rgba(255,255,255,0),
-          rgba(255,255,255,0) 50%,
-          rgba(0,0,0,0.03) 50%, /* Reduced opacity massively for readability */
-          rgba(0,0,0,0.03)
-        );
-        background-size: 100% 3px;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        pointer-events: none;
-        z-index: 9999;
+      20% {
+        transform: translate(-1px, 0px)
       }
 
-      /* CRT Vignette - Push to edges only */
-      .vignette {
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(circle, rgba(0,0,0,0) 70%, rgba(0,0,0,0.5) 100%);
-        pointer-events: none;
-        z-index: 9998;
+      40% {
+        transform: translate(-1px, 0px)
       }
 
-      /* Glitch Effect on Hover - Micro movements only */
-      .glitch-hover:hover {
-        animation: glitch-anim 0.3s infinite;
+      60% {
+        transform: translate(1px, 0px)
       }
 
-      @keyframes glitch-anim {
-        0% { transform: translate(0) }
-        20% { transform: translate(-1px, 0px) }
-        40% { transform: translate(-1px, 0px) }
-        60% { transform: translate(1px, 0px) }
-        80% { transform: translate(1px, 0px) }
-        100% { transform: translate(0) }
+      80% {
+        transform: translate(1px, 0px)
       }
 
-      /* Tighter, crisper text glow */
-      .text-glow { text-shadow: 0 0 2px rgba(255, 176, 0, 0.3); }
-      .text-glow-cyan { text-shadow: 0 0 2px rgba(0, 255, 153, 0.3); }
-      .text-glow-red { text-shadow: 0 0 2px rgba(255, 51, 51, 0.3); }
-      .text-glow-green { text-shadow: 0 0 2px rgba(74, 222, 128, 0.3); }
+      100% {
+        transform: translate(0)
+      }
+    }
 
-      /* Blocky Scrollbar */
-      ::-webkit-scrollbar {
-        width: 12px;
-        height: 12px;
-        background: #111;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #333;
-        border: 1px solid #000;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #ffb000;
-      }
-      ::-webkit-scrollbar-track {
-        background: #000;
-        border-left: 1px solid #333;
-      }
-    </style>
+    /* Tighter, crisper text glow */
+    .text-glow {
+      text-shadow: 0 0 2px rgba(255, 176, 0, 0.3);
+    }
+
+    .text-glow-cyan {
+      text-shadow: 0 0 2px rgba(0, 255, 153, 0.3);
+    }
+
+    .text-glow-red {
+      text-shadow: 0 0 2px rgba(255, 51, 51, 0.3);
+    }
+
+    .text-glow-green {
+      text-shadow: 0 0 2px rgba(74, 222, 128, 0.3);
+    }
+
+    /* Blocky Scrollbar */
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+      background: #111;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border: 1px solid #000;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ffb000;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #000;
+      border-left: 1px solid #333;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -130,7 +169,10 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>
