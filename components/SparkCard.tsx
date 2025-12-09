@@ -45,7 +45,13 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   // Drag logic
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, -100, 0], [0, 1, 1]);
+  // Freeze appears on left drag (negative x), usually reveals right side
+  // Existing freeze indicator logic was 'right-full', kept as is to maintain existing behavior if any, 
+  // but logically for left drag it should be right-aligned. 
   const freezeIndicatorOpacity = useTransform(x, [-150, -50], [1, 0]);
+  
+  // Complete appears on right drag (positive x)
+  const completeIndicatorOpacity = useTransform(x, [50, 150], [0, 1]);
 
   useEffect(() => { if (showNextInput && inputRef.current) inputRef.current.focus(); }, [showNextInput]);
   useEffect(() => { if (isEditingReflection && reflectionInputRef.current) reflectionInputRef.current.focus(); }, [isEditingReflection]);
@@ -144,12 +150,20 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         <div className="absolute -left-4 top-0 w-4 h-6 border-l-2 border-b-2 border-dotted border-retro-amber/40 rounded-bl-none translate-y-[-10px]" />
       )}
 
-      {/* Freeze Indicator */}
+      {/* Freeze Indicator (Left Drag) */}
       <motion.div 
         style={{ opacity: freezeIndicatorOpacity }}
-        className="absolute right-full top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
+        className="absolute right-0 top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
       >
         <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono">[FREEZE_CMD]</span>
+      </motion.div>
+
+      {/* Complete Indicator (Right Drag) */}
+      <motion.div 
+        style={{ opacity: completeIndicatorOpacity }}
+        className="absolute left-0 top-0 bottom-0 pl-4 flex items-center justify-start pointer-events-none z-0"
+      >
+        <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono">[COMPLETE]</span>
       </motion.div>
 
       <motion.div
@@ -165,8 +179,21 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         style={{ x, opacity }}
         drag={!isCompleted ? "x" : false}
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.5, right: 0.1 }}
-        onDragEnd={(e, info) => { if (info.offset.x < -100 && !isCompleted) { playFreezeSound(); freezeTask(task.id); }}}
+        dragElastic={{ left: 0.5, right: 0.5 }}
+        onDragEnd={(e, info) => { 
+          if (info.offset.x < -100 && !isCompleted) { 
+            playFreezeSound(); 
+            freezeTask(task.id); 
+          } else if (info.offset.x > 100 && !isCompleted) {
+             // Swipe Right -> Complete
+             const target = e.target as HTMLElement;
+             const rect = target.getBoundingClientRect();
+             triggerConfetti(rect);
+             playSuccessSound();
+             completeTask(task.id, '🙂');
+             setShowNextInput(true);
+          }
+        }}
         className={cn(
           "relative z-10 p-3 border-2 font-mono",
           // Retro Card Styling: Hard edges, box shadow, colors
