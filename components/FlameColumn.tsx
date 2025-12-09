@@ -126,8 +126,8 @@ export const FlameColumn: React.FC = () => {
     <div className="h-full bg-retro-bg flex flex-col items-center font-mono border-l-2 border-retro-surface relative overflow-hidden">
 
       <div className="p-4 w-full z-10 border-b-2 border-retro-surface bg-retro-bg flex justify-between items-center">
-        <h2 className="text-retro-red text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-          <Activity size={14} />
+        <h2 className="text-retro-red text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+          <Activity size={16} />
           SYSTEM_HEAT
         </h2>
       </div>
@@ -221,8 +221,13 @@ export const FlameColumn: React.FC = () => {
               </div>
             ))}
           </div>
-          <div className="text-[10px] text-retro-dim uppercase tracking-[0.15em]">
-            HOVER_SECTOR_FOR_DATA {hoverDay ? `| ${new Date(hoverDay.ts).toLocaleDateString()} : ${hoverDay.count}` : ''}
+          <div className="text-[10px] text-retro-dim uppercase tracking-[0.15em] text-center flex flex-col items-center min-h-[32px]">
+            <div>HOVER_SECTOR_FOR_DATA</div>
+            <div className={cn("mt-1 text-retro-amber", !hoverDay && "opacity-0")}>
+              {hoverDay
+                ? `${new Date(hoverDay.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} : ${hoverDay.count}`
+                : "placeholder"}
+            </div>
           </div>
         </div>
 
