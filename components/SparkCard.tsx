@@ -45,9 +45,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   // Drag logic
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, -100, 0], [0, 1, 1]);
-  // Freeze appears on left drag (negative x), usually reveals right side
-  // Existing freeze indicator logic was 'right-full', kept as is to maintain existing behavior if any, 
-  // but logically for left drag it should be right-aligned. 
+  
+  // Dynamic Background Colors based on Drag
+  const bgCompleteOpacity = useTransform(x, [50, 150], [0, 1]);
+  const bgFreezeOpacity = useTransform(x, [-150, -50], [1, 0]);
+
+  // Freeze appears on left drag (negative x)
   const freezeIndicatorOpacity = useTransform(x, [-150, -50], [1, 0]);
   
   // Complete appears on right drag (positive x)
@@ -150,12 +153,26 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         <div className="absolute -left-4 top-0 w-4 h-6 border-l-2 border-b-2 border-dotted border-retro-amber/40 rounded-bl-none translate-y-[-10px]" />
       )}
 
+      {/* Drag Background Feedback Layers - Placed BEHIND the motion div */}
+      <div className="absolute inset-0 z-0 overflow-hidden rounded-sm">
+        {/* Right Drag (Complete) - Green */}
+        <motion.div 
+            style={{ opacity: bgCompleteOpacity }}
+            className="absolute inset-0 bg-retro-green/20 border border-retro-green"
+        />
+        {/* Left Drag (Freeze) - Blue */}
+        <motion.div 
+            style={{ opacity: bgFreezeOpacity }}
+            className="absolute inset-0 bg-retro-cyan/20 border border-retro-cyan"
+        />
+      </div>
+
       {/* Freeze Indicator (Left Drag) */}
       <motion.div 
         style={{ opacity: freezeIndicatorOpacity }}
         className="absolute right-0 top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
       >
-        <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono">[FREEZE_CMD]</span>
+        <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono text-glow-cyan">[FREEZE_CMD]</span>
       </motion.div>
 
       {/* Complete Indicator (Right Drag) */}
@@ -163,7 +180,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         style={{ opacity: completeIndicatorOpacity }}
         className="absolute left-0 top-0 bottom-0 pl-4 flex items-center justify-start pointer-events-none z-0"
       >
-        <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono">[COMPLETE]</span>
+        <span className="text-retro-green font-bold text-xs tracking-widest font-mono text-glow-green">[COMPLETE]</span>
       </motion.div>
 
       <motion.div
@@ -195,7 +212,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
           }
         }}
         className={cn(
-          "relative z-10 p-3 border-2 font-mono",
+          "relative z-10 p-3 border-2 font-mono transition-colors duration-200",
           // Retro Card Styling: Hard edges, box shadow, colors
           isCompleted
             ? "bg-retro-surface border-gray-700 text-gray-500"
@@ -217,13 +234,14 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
           <div className="flex-1 min-w-0">
             {isEditingContent ? (
-              <form onSubmit={handleContentSubmit}>
+              <form onSubmit={handleContentSubmit} className="flex items-center">
+                 <span className="text-retro-amber mr-1 blink">&gt;</span>
                 <input
                   ref={contentInputRef}
                   value={contentVal}
                   onChange={(e) => setContentVal(e.target.value)}
                   onBlur={handleContentSubmit}
-                  className="w-full bg-black text-retro-cyan border-b-2 border-retro-cyan focus:outline-none font-mono"
+                  className="w-full bg-black text-retro-cyan focus:outline-none font-mono placeholder-retro-dim/50 caret-retro-cyan"
                   placeholder="INPUT_COMMAND..."
                 />
               </form>
@@ -231,7 +249,9 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
               <p 
                 onClick={() => !isCompleted && setIsEditingContent(true)}
                 className={cn(
-                  "text-sm leading-relaxed break-words cursor-text font-bold",
+                  "text-sm leading-relaxed break-words cursor-text font-bold transition-all",
+                  // Add Glitch Effect on Hover for active tasks
+                  !isCompleted && "hover:text-retro-cyan glitch-hover",
                   isCompleted && "line-through opacity-50 decoration-2"
                 )}
               >
@@ -360,7 +380,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                 value={nextInputVal}
                 onChange={(e) => setNextInputVal(e.target.value)}
                 placeholder="NEXT_ACTION..."
-                className="flex-1 bg-black text-xs text-white focus:outline-none font-mono"
+                className="flex-1 bg-black text-xs text-white focus:outline-none font-mono caret-retro-cyan"
                 onBlur={() => !nextInputVal && setShowNextInput(false)}
               />
               <button type="submit" className="text-[10px] bg-retro-amber text-black px-1 font-bold">EXEC</button>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FlowColumn } from './components/FlowColumn';
 import { FreezerColumn } from './components/FreezerColumn';
 import { FlameColumn } from './components/FlameColumn';
@@ -10,7 +10,7 @@ type Tab = 'freezer' | 'flow' | 'flame';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('flow');
-  const { tasks, isMobileInputOpen } = useSparkStore();
+  const { tasks, isMobileInputOpen, setMobileInputOpen } = useSparkStore();
 
   // Calculate stats for badge
   const today = new Date().setHours(0, 0, 0, 0);
@@ -18,12 +18,31 @@ const App: React.FC = () => {
     (t) => t.status === 'completed' && t.completedAt && t.completedAt > today
   ).length;
 
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // CMD+K or CTRL+K to focus input
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        const desktopInput = document.querySelector('input[placeholder="ENTER_COMMAND..."]') as HTMLInputElement;
+        if (desktopInput) {
+          desktopInput.focus();
+        } else {
+          setMobileInputOpen(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setMobileInputOpen]);
+
   return (
     <div className="flex h-[100dvh] w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-16 md:pb-0 relative selection:bg-retro-amber selection:text-black">
       
-      {/* CRT Overlay Effects */}
+      {/* CRT Overlay Effects - Cleaned up */}
       <div className="scanlines" />
-      <div className="flicker" />
+      <div className="vignette" />
 
       {/* Left Column: Freezer */}
       <aside className={cn(

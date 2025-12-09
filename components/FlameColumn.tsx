@@ -1,7 +1,8 @@
 import React from 'react';
-import { Flame, Activity, Download } from 'lucide-react';
+import { Flame, Activity, Download, Cpu } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { motion } from 'framer-motion';
+import { cn } from '../utils';
 
 export const FlameColumn: React.FC = () => {
   const { tasks } = useSparkStore();
@@ -11,16 +12,11 @@ export const FlameColumn: React.FC = () => {
     (t) => t.status === 'completed' && t.completedAt && t.completedAt > today
   ).length;
 
-  const intensity = Math.min(completedToday, 5);
+  const maxHeat = 8; // Target daily tasks
+  const heatPercentage = Math.min((completedToday / maxHeat) * 100, 100);
 
-  const flameColors = [
-    'text-retro-dim', // 0
-    'text-retro-amber opacity-40', // 1
-    'text-retro-amber', // 2
-    'text-retro-red opacity-80', // 3
-    'text-retro-red', // 4
-    'text-white drop-shadow-[0_0_10px_rgba(255,51,51,1)]', // 5
-  ];
+  // Determine intensity level (0-3)
+  const intensityLevel = heatPercentage >= 100 ? 3 : heatPercentage >= 50 ? 2 : heatPercentage > 0 ? 1 : 0;
 
   const handleExport = () => {
     try {
@@ -47,76 +43,108 @@ export const FlameColumn: React.FC = () => {
            style={{ backgroundImage: 'linear-gradient(#ff3333 1px, transparent 1px), linear-gradient(90deg, #ff3333 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
       </div>
 
-      <div className="p-6 w-full z-10 border-b-2 border-retro-surface bg-retro-bg">
-        <h2 className="text-retro-red text-xs font-bold uppercase tracking-widest flex items-center justify-end gap-2 mb-1">
-          SYSTEM_HEAT
+      <div className="p-4 w-full z-10 border-b-2 border-retro-surface bg-retro-bg flex justify-between items-center">
+        <h2 className="text-retro-red text-xs font-bold uppercase tracking-widest flex items-center gap-2">
           <Activity size={14} />
+          SYSTEM_HEAT
         </h2>
+        <span className="text-[10px] text-retro-red font-bold animate-pulse">{completedToday} / {maxHeat} UNITS</span>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full gap-8 z-10">
+      <div className="flex-1 flex flex-col items-center justify-start w-full gap-8 z-10 p-6 overflow-y-auto">
         
-        {/* Pixel Flame Visual */}
-        <div className="relative border-4 border-retro-surface bg-black p-4 shadow-hard-sm">
-            {/* "Screen" Effect */}
-            <div className="absolute inset-0 bg-retro-red/10 pointer-events-none" />
-            
-            <motion.div
-                animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.8, 1, 0.8],
-                }}
-                transition={{
-                    duration: 0.2, // Fast glitch flicker
-                    repeat: Infinity,
-                    repeatType: "reverse"
-                }}
-                className={`transition-colors duration-1000 ${flameColors[intensity]}`}
-            >
-                {/* Using standard icon but framing it to look like a sprite */}
-                <Flame size={64} strokeWidth={2} fill="currentColor" />
-            </motion.div>
+        {/* Reactor Core Visual */}
+        <div className="relative mt-8 group cursor-default">
+           {/* Outer Ring */}
+           <div className={cn(
+             "w-32 h-32 rounded-full border-4 border-dashed border-gray-800 flex items-center justify-center transition-all duration-1000",
+             intensityLevel > 0 && "border-retro-red/30 animate-[spin_10s_linear_infinite]"
+           )}>
+              {/* Inner Ring */}
+              <div className={cn(
+                "w-24 h-24 rounded-full border-2 border-gray-800 flex items-center justify-center transition-all duration-500",
+                intensityLevel > 1 && "border-retro-red/60 shadow-[0_0_15px_rgba(255,51,51,0.4)]"
+              )}>
+                 {/* Core */}
+                 <div className={cn(
+                   "w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center transition-all duration-300 relative overflow-hidden",
+                   intensityLevel > 0 && "bg-retro-red/10",
+                   intensityLevel > 2 && "bg-retro-red/20 shadow-[0_0_20px_rgba(255,51,51,0.8)] animate-pulse"
+                 )}>
+                    <Flame 
+                      size={32} 
+                      className={cn(
+                        "text-gray-800 transition-all duration-500",
+                        intensityLevel === 1 && "text-retro-red/60",
+                        intensityLevel === 2 && "text-retro-red",
+                        intensityLevel === 3 && "text-white drop-shadow-[0_0_5px_rgba(255,51,51,1)] scale-110"
+                      )} 
+                    />
+                    
+                    {/* Scanline overlay for core */}
+                    <div className="absolute inset-0 bg-black/10 z-10 pointer-events-none" style={{ backgroundSize: '100% 2px', backgroundImage: 'linear-gradient(rgba(0,0,0,0.5) 50%, transparent 50%)' }} />
+                 </div>
+              </div>
+           </div>
+           
+           <div className="absolute -bottom-6 left-0 right-0 text-center">
+             <span className={cn(
+               "text-[10px] font-bold uppercase tracking-[0.2em]",
+               intensityLevel === 0 && "text-gray-700",
+               intensityLevel === 1 && "text-retro-red/60",
+               intensityLevel >= 2 && "text-retro-red text-glow-red"
+             )}>
+               {intensityLevel === 0 ? "IDLE" : intensityLevel === 1 ? "WARMING" : intensityLevel === 2 ? "ACTIVE" : "CRITICAL"}
+             </span>
+           </div>
         </div>
 
-        {/* Stats - Seven Segment Simulation */}
-        <div className="text-center relative z-10">
-            <motion.div 
-                key={completedToday}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-6xl font-bold text-retro-red font-mono tracking-tighter"
-                style={{ textShadow: "0 0 10px rgba(255, 51, 51, 0.5)" }}
-            >
-                {completedToday.toString().padStart(2, '0')}
-            </motion.div>
-            <p className="text-[10px] text-retro-dim uppercase tracking-widest mt-1 border-t border-retro-dim pt-1 inline-block">
-                CYCLE_COUNT
-            </p>
+        {/* Heat Gauge */}
+        <div className="w-full max-w-[200px] space-y-2">
+           <div className="flex justify-between text-[10px] text-gray-500 uppercase font-bold">
+             <span>Efficiency</span>
+             <span>{Math.round(heatPercentage)}%</span>
+           </div>
+           <div className="h-4 bg-black border border-gray-800 p-[2px] flex gap-[2px]">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div 
+                  key={i}
+                  className={cn(
+                    "flex-1 transition-all duration-500",
+                    (i + 1) * 10 <= heatPercentage 
+                      ? i > 7 ? "bg-retro-red shadow-[0_0_5px_rgba(255,51,51,0.8)]" : "bg-retro-red/60"
+                      : "bg-gray-900"
+                  )}
+                />
+              ))}
+           </div>
         </div>
 
-        {/* System Message */}
-        <div className="w-3/4 p-3 border border-retro-dim bg-retro-surface/30 text-center">
-            <p className="text-[10px] text-retro-amber leading-relaxed font-bold uppercase">
-                {completedToday === 0 
-                    ? ">> SYSTEM_IDLE" 
-                    : completedToday < 3 
-                    ? ">> WARMUP_SEQ" 
-                    : completedToday < 5
-                    ? ">> OPTIMAL_FLOW"
-                    : ">> OVERCLOCKING"}
-            </p>
+        {/* Stats Grid */}
+        <div className="w-full grid grid-cols-2 gap-2 mt-4">
+           <div className="bg-black border border-gray-800 p-2 flex flex-col items-center justify-center">
+             <span className="text-gray-600 text-[9px] uppercase">Active</span>
+             <span className="text-retro-amber font-bold text-lg">{tasks.filter(t => t.status === 'active').length}</span>
+           </div>
+           <div className="bg-black border border-gray-800 p-2 flex flex-col items-center justify-center">
+             <span className="text-gray-600 text-[9px] uppercase">Frozen</span>
+             <span className="text-retro-cyan font-bold text-lg">{tasks.filter(t => t.status === 'frozen').length}</span>
+           </div>
         </div>
-      </div>
 
-      {/* Footer / Actions */}
-      <div className="p-6 mt-auto z-10 w-full">
-        <button 
-          onClick={handleExport}
-          className="w-full flex items-center justify-center gap-2 text-[10px] font-bold text-black bg-retro-dim hover:bg-retro-amber transition-colors px-3 py-3 border-2 border-transparent hover:border-retro-amber shadow-hard-sm"
-        >
-          <Download size={12} />
-          INIT_DUMP.JSON
-        </button>
+        <div className="mt-auto w-full pt-6">
+           <button 
+             onClick={handleExport}
+             className="group w-full border-2 border-dashed border-gray-700 hover:border-retro-red p-3 flex items-center justify-center gap-2 text-gray-500 hover:text-retro-red transition-all hover:bg-retro-red/5"
+           >
+             <Download size={16} />
+             <span className="text-xs font-bold uppercase tracking-widest group-hover:animate-pulse">DUMP_MEMORY</span>
+           </button>
+           <p className="text-[9px] text-gray-800 text-center mt-2 uppercase font-mono">
+             v1.0.4 // SPARK_OS
+           </p>
+        </div>
+
       </div>
     </div>
   );

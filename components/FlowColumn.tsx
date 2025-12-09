@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Zap, SendHorizontal } from 'lucide-react';
+import { Plus, Zap, SendHorizontal, Radio } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { SparkCard } from './SparkCard';
 import { SparkNode } from '../types';
@@ -80,30 +80,51 @@ export const FlowColumn: React.FC = () => {
            <Zap size={16} />
            &gt;_ EXECUTION_LOG
          </h2>
-         <div className="w-2 h-4 bg-retro-amber animate-pulse"></div>
+         <div className="flex gap-1">
+           <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse"></div>
+           <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-75"></div>
+           <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-150"></div>
+         </div>
       </div>
 
       {/* Task Stream - Scrollable Flex Item */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4 relative z-10 pb-24 md:pb-4 scroll-smooth">
         <AnimatePresence mode='popLayout'>
-          {rootTasks.map((task) => <TaskChain key={task.id} task={task} allTasks={tasks} />)}
+          {rootTasks.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
+              className="flex flex-col items-center justify-center h-64 text-retro-dim/30 space-y-4"
+            >
+               {/* Radar Animation */}
+               <div className="relative w-24 h-24 border border-retro-dim/30 rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 border border-retro-dim/20 rounded-full scale-50" />
+                  <div className="w-full h-1/2 bg-gradient-to-t from-retro-amber/10 to-transparent absolute top-0 origin-bottom animate-[spin_3s_linear_infinite]" />
+               </div>
+               <div className="text-center font-mono">
+                  <p className="text-sm font-bold tracking-widest">NO_TASKS_DETECTED</p>
+                  <p className="text-[10px] mt-1">WAITING_FOR_INPUT...</p>
+               </div>
+            </motion.div>
+          ) : (
+            rootTasks.map((task) => <TaskChain key={task.id} task={task} allTasks={tasks} />)
+          )}
         </AnimatePresence>
         <div ref={bottomRef} className="h-4" /> 
       </div>
 
       {/* Desktop Input - CLI Style */}
       <div className="hidden md:block px-4 pt-2 pb-4 z-30 bg-retro-bg border-t-2 border-retro-surface flex-none">
-        <form onSubmit={handleMainSubmit} className="flex gap-2 items-center bg-black border-2 border-retro-amber p-2 shadow-[4px_4px_0_0_#996900]">
-          <span className="text-retro-cyan font-bold">&gt;</span>
+        <form onSubmit={handleMainSubmit} className="flex gap-2 items-center bg-black border-2 border-retro-amber p-2 shadow-[4px_4px_0_0_#996900] group focus-within:shadow-[4px_4px_0_0_#ffb000] transition-shadow">
+          <span className="text-retro-cyan font-bold animate-pulse">&gt;</span>
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="ENTER_COMMAND..."
-            className="flex-1 bg-black text-retro-amber placeholder-gray-700 focus:outline-none font-mono"
+            className="flex-1 bg-black text-retro-amber placeholder-retro-amber/30 focus:outline-none font-mono"
             autoFocus
           />
-          <div className="w-2 h-4 bg-retro-amber animate-pulse" />
+          <div className="w-2 h-4 bg-retro-amber animate-pulse-fast" />
         </form>
       </div>
 
@@ -144,6 +165,7 @@ export const FlowColumn: React.FC = () => {
                     placeholder="CMD..."
                     className="flex-1 bg-black text-retro-amber placeholder-gray-600 focus:outline-none font-mono"
                   />
+                  <div className="w-2 h-4 bg-retro-amber animate-pulse-fast" />
                 </div>
                 <button type="submit" disabled={!inputValue.trim()} className="bg-retro-cyan text-black border-2 border-white p-3 shadow-[4px_4px_0_0_#fff] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50">
                   <SendHorizontal size={24} />
