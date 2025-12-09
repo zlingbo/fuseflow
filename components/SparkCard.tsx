@@ -31,6 +31,8 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const [reflectionVal, setReflectionVal] = useState(task.reflection || '');
   const [isEditingContent, setIsEditingContent] = useState(task.content === '');
   const [contentVal, setContentVal] = useState(task.content);
+  const [isShaking, setIsShaking] = useState(false);
+  const [shakeProfile, setShakeProfile] = useState({ scaleAmp: 0.03, rotAmp: 0.8, duration: 0.28 });
 
   const showFeelingSelector = activePopoverId === task.id;
 
@@ -41,6 +43,26 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
   const isCompleted = task.status === 'completed';
+  const dragCompleteThreshold = 90;
+  const dragFreezeThreshold = -90;
+  const shakeTimer = useRef<number | null>(null);
+
+  const makeShakeProfile = () => {
+    const scaleAmp = 0.02 + Math.random() * 0.03; // 0.02 - 0.05
+    const rotAmp = 0.4 + Math.random() * 0.7;    // 0.4 - 1.1 deg
+    const duration = 0.22 + Math.random() * 0.12; // 0.22 - 0.34 s
+    return { scaleAmp, rotAmp, duration };
+  };
+
+  const triggerShake = () => {
+    if (shakeTimer.current) {
+      clearTimeout(shakeTimer.current);
+    }
+    const profile = makeShakeProfile();
+    setShakeProfile(profile);
+    setIsShaking(true);
+    shakeTimer.current = window.setTimeout(() => setIsShaking(false), profile.duration * 1000 + 40);
+  };
 
   // Drag logic
   const x = useMotionValue(0);
@@ -59,6 +81,20 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   useEffect(() => { if (showNextInput && inputRef.current) inputRef.current.focus(); }, [showNextInput]);
   useEffect(() => { if (isEditingReflection && reflectionInputRef.current) reflectionInputRef.current.focus(); }, [isEditingReflection]);
   useEffect(() => { if (isEditingContent && contentInputRef.current) contentInputRef.current.focus(); }, [isEditingContent]);
+  useEffect(() => {
+    return () => {
+      if (shakeTimer.current) {
+        clearTimeout(shakeTimer.current);
+      }
+    };
+  }, []);
+
+  // Newly split child should shake once when it appears (content 为空即来自拆分)
+  useEffect(() => {
+    if (!task.content && !isCompleted) {
+      triggerShake();
+    }
+  }, [task.content, task.createdAt, isCompleted]);
 
   useEffect(() => {
     if (showFeelingSelector) {
@@ -140,6 +176,9 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   };
 
   const handleSplit = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!isShaking) {
+      triggerShake();
+    }
     const rect = e.currentTarget.getBoundingClientRect();
     triggerShatter(rect);
     playSplitSound();
@@ -184,24 +223,27 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       </motion.div>
 
       <motion.div
-        layout
         initial={isNew ? { opacity: 0 } : false}
-        animate={{ opacity: 1 }}
+        animate={
+          isShaking
+            ? { 
+                opacity: 1,
+                scale: [1, 1 + shakeProfile.scaleAmp, 1, 1 + shakeProfile.scaleAmp * 0.6, 1],
+                rotate: [0, -shakeProfile.rotAmp, shakeProfile.rotAmp * 0.8, -shakeProfile.rotAmp * 0.6, 0]
+              }
+            : { opacity: 1, scale: 1, rotate: 0 }
+        }
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
-        // Mechanical Transition: No spring, just a fast, clean slide
-        transition={{ 
-          layout: { type: "tween", duration: 0.15, ease: "circOut" },
-          opacity: { duration: 0.1 }
-        }}
-        style={{ x, opacity }}
+        transition={{ opacity: { duration: 0.1 }, scale: { duration: shakeProfile.duration }, rotate: { duration: shakeProfile.duration } }}
+        style={{ x, opacity, touchAction: 'pan-y' }}
         drag={!isCompleted ? "x" : false}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.5, right: 0.5 }}
         onDragEnd={(e, info) => { 
-          if (info.offset.x < -100 && !isCompleted) { 
+          if (info.offset.x < dragFreezeThreshold && !isCompleted) { 
             playFreezeSound(); 
             freezeTask(task.id); 
-          } else if (info.offset.x > 100 && !isCompleted) {
+          } else if (info.offset.x > dragCompleteThreshold && !isCompleted) {
              // Swipe Right -> Complete
              const target = e.target as HTMLElement;
              const rect = target.getBoundingClientRect();
@@ -225,7 +267,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
             onClick={handleComplete}
             disabled={isCompleted}
             className={cn(
-              "mt-0.5 font-bold text-lg leading-none hover:text-retro-cyan transition-colors",
+              "mt-0.5 font-bold text-xl md:text-lg leading-none hover:text-retro-cyan transition-colors min-w-[36px]",
               isCompleted ? "text-retro-cyan" : "text-retro-amber"
             )}
           >
@@ -339,26 +381,51 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
           {/* Actions: Text Buttons / ASCII Icons */}
           {!isEditingReflection && (
-            <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={() => setIsEditingReflection(!isEditingReflection)} className="text-gray-600 hover:text-retro-green" title="Comment">
-                <MessageSquare size={14} />
+            <div className="flex flex-col gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={() => setIsEditingReflection(!isEditingReflection)}
+                className="text-gray-600 hover:text-retro-green p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                title="Comment"
+                aria-label="添加备注"
+              >
+                <MessageSquare size={16} />
               </button>
 
               {!isCompleted ? (
                 <>
-                  <button onClick={handleSplit} className="text-gray-600 hover:text-retro-amber" title="Split">
-                    <Hammer size={14} />
+                  <button
+                    onClick={handleSplit}
+                    className="text-gray-600 hover:text-retro-amber p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                    title="Split"
+                    aria-label="拆分任务"
+                  >
+                    <Hammer size={16} />
                   </button>
-                  <button onClick={() => { playFreezeSound(); freezeTask(task.id); }} className="text-gray-600 hover:text-retro-cyan" title="Freeze">
-                    <Snowflake size={14} />
+                  <button
+                    onClick={() => { playFreezeSound(); freezeTask(task.id); }}
+                    className="text-gray-600 hover:text-retro-cyan p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                    title="Freeze"
+                    aria-label="冻结任务"
+                  >
+                    <Snowflake size={16} />
                   </button>
-                  <button onClick={() => deleteTask(task.id)} className="text-gray-600 hover:text-retro-red" title="Delete">
-                    <Trash2 size={14} />
+                  <button
+                    onClick={() => deleteTask(task.id)}
+                    className="text-gray-600 hover:text-retro-red p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                    title="Delete"
+                    aria-label="删除任务"
+                  >
+                    <Trash2 size={16} />
                   </button>
                 </>
               ) : (
-                <button onClick={() => setShowNextInput(true)} className="text-gray-600 hover:text-retro-cyan" title="Continue">
-                  <CornerDownRight size={14} />
+                <button
+                  onClick={() => setShowNextInput(true)}
+                  className="text-gray-600 hover:text-retro-cyan p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
+                  title="Continue"
+                  aria-label="继续添加子任务"
+                >
+                  <CornerDownRight size={16} />
                 </button>
               )}
             </div>

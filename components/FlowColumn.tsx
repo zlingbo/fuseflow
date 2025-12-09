@@ -25,14 +25,12 @@ const TaskChain: React.FC<{ task: SparkNode; allTasks: SparkNode[]; depth?: numb
 
   return (
     <motion.div 
-      // Mechanical Transition: No spring, purely linear/mechanical
-      layout transition={{ type: "tween", duration: 0.15, ease: "circOut" }}
       className="flex flex-col gap-2 group"
       style={{ zIndex: shouldBoost ? 50 : 'auto', position: 'relative' }}
     >
       <SparkCard task={task} isChild={depth > 0} />
       {children.length > 0 && (
-        <motion.div layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="pl-6 ml-2 border-l-2 border-gray-800 flex flex-col gap-2">
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="pl-6 ml-2 border-l-2 border-gray-800 flex flex-col gap-2">
           <AnimatePresence mode="popLayout" initial={false}>
             {children.map(child => <TaskChain key={child.id} task={child} allTasks={allTasks} depth={depth + 1} />)}
           </AnimatePresence>
@@ -99,7 +97,7 @@ export const FlowColumn: React.FC = () => {
       </div>
 
       {/* Task Stream - Scrollable Flex Item */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4 relative z-10 pb-24 md:pb-4 scroll-smooth">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4 relative z-10 pb-[170px] md:pb-4 scroll-smooth">
         <AnimatePresence mode='popLayout'>
           {rootTasks.length === 0 ? (
             <motion.div 
@@ -146,9 +144,11 @@ export const FlowColumn: React.FC = () => {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             whileTap={{ y: 2 }}
             onClick={() => setMobileInputOpen(true)}
-            className="md:hidden fixed bottom-24 right-6 z-50 w-12 h-12 bg-retro-amber text-black border-2 border-retro-amber shadow-[0_0_15px_rgba(255,176,0,0.6)] flex items-center justify-center transition-all rounded-2xl hover:shadow-[0_0_25px_rgba(255,176,0,0.8)]"
+            className="md:hidden fixed right-5 z-50 w-14 h-14 bg-retro-amber text-black border-2 border-retro-amber shadow-[0_0_15px_rgba(255,176,0,0.6)] flex items-center justify-center transition-all rounded-3xl hover:shadow-[0_0_25px_rgba(255,176,0,0.8)]"
+            style={{ bottom: 'calc(108px + env(safe-area-inset-bottom))' }}
+            aria-label="创建新任务"
           >
-            <Plus size={24} strokeWidth={3} />
+            <Plus size={26} strokeWidth={3} />
           </motion.button>
         )}
       </AnimatePresence>
@@ -161,11 +161,11 @@ export const FlowColumn: React.FC = () => {
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-[60] px-2"
-              style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }} 
+              className="md:hidden fixed bottom-0 left-0 right-0 z-[60] px-3"
+              style={{ paddingBottom: 'max(28px, env(safe-area-inset-bottom))' }} 
             >
-              <form onSubmit={handleMainSubmit} className="flex gap-2 items-stretch w-full">
-                <div className="flex-1 flex gap-2 items-center bg-black border-2 border-retro-amber p-3 shadow-[4px_4px_0_0_#996900]">
+              <form onSubmit={handleMainSubmit} className="flex gap-3 items-stretch w-full">
+                <div className="flex-1 flex gap-2 items-center bg-black border-2 border-retro-amber p-3.5 shadow-[4px_4px_0_0_#996900] rounded-xl">
                    <span className="text-retro-cyan font-bold">&gt;</span>
                    <input
                     ref={inputRef}
@@ -173,12 +173,17 @@ export const FlowColumn: React.FC = () => {
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="CMD..."
-                    className="flex-1 bg-black text-retro-amber placeholder-gray-600 focus:outline-none font-mono"
+                    placeholder="输入任务，回车即可创建"
+                    className="flex-1 bg-black text-retro-amber placeholder-gray-600 focus:outline-none font-mono text-base"
                   />
                   <div className="w-2 h-4 bg-retro-amber animate-pulse-fast" />
                 </div>
-                <button type="submit" disabled={!inputValue.trim()} className="bg-retro-cyan text-black border-2 border-white p-3 shadow-[4px_4px_0_0_#fff] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50">
+                <button
+                  type="submit"
+                  disabled={!inputValue.trim()}
+                  className="bg-retro-cyan text-black border-2 border-white px-4 min-w-[58px] shadow-[4px_4px_0_0_#fff] active:translate-y-1 active:shadow-none transition-all disabled:opacity-50 rounded-xl flex items-center justify-center"
+                  aria-label="提交任务"
+                >
                   <SendHorizontal size={24} />
                 </button>
               </form>

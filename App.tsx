@@ -3,7 +3,7 @@ import { FlowColumn } from './components/FlowColumn';
 import { FreezerColumn } from './components/FreezerColumn';
 import { FlameColumn } from './components/FlameColumn';
 import { Snowflake, Zap, Flame } from 'lucide-react';
-import { cn } from './utils';
+import { cn, unlockAudio } from './utils';
 import { useSparkStore } from './store/useSparkStore';
 
 type Tab = 'freezer' | 'flow' | 'flame';
@@ -37,8 +37,16 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setMobileInputOpen]);
 
+  // Mobile audio unlock: resume AudioContext on first user gesture
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    const events: (keyof DocumentEventMap)[] = ['touchstart', 'click'];
+    events.forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true }));
+    return () => events.forEach((ev) => document.removeEventListener(ev, unlock));
+  }, []);
+
   return (
-    <div className="flex h-[100dvh] w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-16 md:pb-0 relative selection:bg-retro-amber selection:text-black">
+    <div className="flex h-[100dvh] w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-0 relative selection:bg-retro-amber selection:text-black">
       
       {/* CRT Overlay Effects - Cleaned up */}
       <div className="scanlines" />
@@ -73,52 +81,57 @@ const App: React.FC = () => {
 
       {/* Mobile Navigation (Mechanical Buttons) */}
       {!isMobileInputOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-retro-bg border-t-2 border-retro-amber flex items-center z-50 px-2 gap-2">
-          
+        <div
+          className="md:hidden fixed bottom-0 left-0 right-0 bg-retro-bg border-t-2 border-retro-amber flex items-center z-50 px-2 gap-2"
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))', height: '92px' }}
+        >
           <button 
             onClick={() => setActiveTab('freezer')}
             className={cn(
-              "flex-1 h-12 flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5", 
+              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg", 
               activeTab === 'freezer' 
-                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan shadow-[0_0_8px_rgba(0,255,153,0.3)]" 
+                ? "border-retro-cyan bg-retro-cyan/10 text-retro-cyan shadow-[0_0_10px_rgba(0,255,153,0.35)]" 
                 : "border-retro-surface text-gray-600 hover:border-retro-cyan/50"
             )}
+            aria-pressed={activeTab === 'freezer'}
           >
-            <Snowflake size={18} />
-            <span className="text-[10px] uppercase font-bold mt-0.5 tracking-wider">Freeze</span>
+            <Snowflake size={20} />
+            <span className="text-[11px] uppercase font-bold mt-1 tracking-widest">Freeze</span>
           </button>
           
           <button 
             onClick={() => setActiveTab('flow')}
             className={cn(
-              "flex-1 h-12 flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5", 
+              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg", 
               activeTab === 'flow' 
-                ? "border-retro-amber bg-retro-amber/10 text-retro-amber shadow-[0_0_8px_rgba(255,176,0,0.3)]" 
+                ? "border-retro-amber bg-retro-amber/10 text-retro-amber shadow-[0_0_10px_rgba(255,176,0,0.35)]" 
                 : "border-retro-surface text-gray-600 hover:border-retro-amber/50"
             )}
+            aria-pressed={activeTab === 'flow'}
           >
-            <Zap size={18} />
-            <span className="text-[10px] uppercase font-bold mt-0.5 tracking-wider">Flow</span>
+            <Zap size={20} />
+            <span className="text-[11px] uppercase font-bold mt-1 tracking-widest">Flow</span>
           </button>
           
           <button 
             onClick={() => setActiveTab('flame')}
             className={cn(
-              "flex-1 h-12 flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 relative", 
+              "flex-1 h-[64px] flex flex-col items-center justify-center border-2 transition-all active:translate-y-0.5 rounded-lg relative", 
               activeTab === 'flame' 
-                ? "border-retro-red bg-retro-red/10 text-retro-red shadow-[0_0_8px_rgba(255,51,51,0.3)]" 
+                ? "border-retro-red bg-retro-red/10 text-retro-red shadow-[0_0_10px_rgba(255,51,51,0.35)]" 
                 : "border-retro-surface text-gray-600 hover:border-retro-red/50"
             )}
+            aria-pressed={activeTab === 'flame'}
           >
             <div className="relative">
-              <Flame size={18} />
+              <Flame size={20} />
               {sparkCount > 0 && (
-                <span className="absolute -top-2 -right-3 bg-retro-red text-black text-[9px] font-bold px-1 min-w-[14px] h-[14px] flex items-center justify-center border border-black">
+                <span className="absolute -top-2 -right-3 bg-retro-red text-black text-[10px] font-bold px-1 min-w-[16px] h-[16px] flex items-center justify-center border border-black rounded-sm">
                   {sparkCount > 99 ? '99' : sparkCount}
                 </span>
               )}
             </div>
-            <span className="text-[10px] uppercase font-bold mt-0.5 tracking-wider">Heat</span>
+            <span className="text-[11px] uppercase font-bold mt-1 tracking-widest">Heat</span>
           </button>
         </div>
       )}

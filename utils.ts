@@ -22,10 +22,25 @@ export const formatDuration = (ms: number): string => {
 
 // --- Retro Sound Effects System (8-bit) ---
 
+let sharedCtx: AudioContext | null = null;
+
 const createAudioContext = () => {
   const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
   if (!AudioContext) return null;
-  return new AudioContext();
+  if (sharedCtx && sharedCtx.state !== 'closed') return sharedCtx;
+  sharedCtx = new AudioContext();
+  return sharedCtx;
+};
+
+export const unlockAudio = () => {
+  try {
+    const ctx = createAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume();
+    }
+  } catch (e) {
+    // Ignore unlock failures; mobile will retry on next gesture
+  }
 };
 
 export const playSuccessSound = () => {
@@ -111,6 +126,33 @@ export const playSplitSound = () => {
     
     osc.start(t);
     osc.stop(t + 0.15);
+  } catch (e) {
+    console.error("Audio play failed", e);
+  }
+};
+
+export const playDeleteSound = () => {
+  try {
+    const ctx = createAudioContext();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+
+    // Short metallic click + low thump
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + 0.18);
   } catch (e) {
     console.error("Audio play failed", e);
   }
