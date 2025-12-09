@@ -1,0 +1,23 @@
+{
+  "name": "FUSE FLOW",
+  "short_name": "Fuse",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1f222a",
+  "theme_color": "#1f222a",
+  "icons": [
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP8z8DwHwAFgwJ/lrISFQAAAABJRU5ErkJggg==",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP8z8DwHwAFgwJ/lrISFQAAAABJRU5ErkJggg==",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
