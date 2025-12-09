@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { Trash2, CornerDownRight, MessageSquare, Hammer, Snowflake } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { SparkNode, TaskFeeling } from '../types';
@@ -40,12 +40,16 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const reflectionInputRef = useRef<HTMLTextAreaElement>(null);
   const contentInputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const reflectionFormRef = useRef<HTMLDivElement>(null);
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
   const isCompleted = task.status === 'completed';
   const dragCompleteThreshold = 90;
   const dragFreezeThreshold = -90;
   const shakeTimer = useRef<number | null>(null);
+  const longPressTimer = useRef<number | null>(null);
+  const LONG_PRESS_MS = 550;
 
   const makeShakeProfile = () => {
     const scaleAmp = 0.02 + Math.random() * 0.03; // 0.02 - 0.05
@@ -69,7 +73,6 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   const opacity = useTransform(x, [-200, -100, 0], [0, 1, 1]);
   
   // Dynamic Background Colors based on Drag
-  const bgCompleteOpacity = useTransform(x, [50, 150], [0, 1]);
   const bgFreezeOpacity = useTransform(x, [-150, -50], [1, 0]);
 
   // Freeze appears on left drag (negative x)
@@ -78,6 +81,15 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
   // Complete appears on right drag (positive x)
   const completeIndicatorOpacity = useTransform(x, [50, 150], [0, 1]);
 
+  const rightIndicatorText = isCompleted ? '[SUBTASK_CHAIN]' : '[COMPLETE]';
+  const rightIndicatorColor = isCompleted ? 'text-retro-amber' : 'text-retro-green';
+  const rightBgClass = isCompleted
+    ? "absolute inset-0 bg-retro-amber/18 border border-retro-amber/70"
+    : "absolute inset-0 bg-retro-green/20 border border-retro-green";
+  const leftBgClass = isCompleted
+    ? "absolute inset-0 bg-retro-surface/15 border border-retro-surface/40"
+    : "absolute inset-0 bg-[#c9f3ff2a] border border-[#7ed8ff]";
+
   useEffect(() => { if (showNextInput && inputRef.current) inputRef.current.focus(); }, [showNextInput]);
   useEffect(() => { if (isEditingReflection && reflectionInputRef.current) reflectionInputRef.current.focus(); }, [isEditingReflection]);
   useEffect(() => { if (isEditingContent && contentInputRef.current) contentInputRef.current.focus(); }, [isEditingContent]);
@@ -85,6 +97,9 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
     return () => {
       if (shakeTimer.current) {
         clearTimeout(shakeTimer.current);
+      }
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
       }
     };
   }, []);
@@ -107,6 +122,18 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showFeelingSelector, setActivePopoverId]);
+
+  // 备注编辑：点击空白处收起
+  useEffect(() => {
+    if (!isEditingReflection) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (reflectionFormRef.current && !reflectionFormRef.current.contains(event.target as Node)) {
+        setIsEditingReflection(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isEditingReflection]);
 
   const triggerConfetti = (rect: DOMRect) => {
     const x = (rect.left + rect.width / 2) / window.innerWidth;
@@ -175,14 +202,46 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
     }
   };
 
-  const handleSplit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const runSplit = (rect?: DOMRect | null) => {
     if (!isShaking) {
       triggerShake();
     }
-    const rect = e.currentTarget.getBoundingClientRect();
-    triggerShatter(rect);
+    const targetRect = rect ?? cardRef.current?.getBoundingClientRect();
+    if (targetRect) {
+      triggerShatter(targetRect);
+    }
     playSplitSound();
     splitTask(task.id);
+  };
+
+  const handleSplit = (e: React.MouseEvent<HTMLButtonElement>) => {
+    runSplit(e.currentTarget.getBoundingClientRect());
+  };
+
+  const clearLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handlePointerDown = () => {
+    if (isCompleted) return;
+    clearLongPress();
+    longPressTimer.current = window.setTimeout(() => {
+      runSplit();
+    }, LONG_PRESS_MS);
+  };
+
+  const handlePointerUp = () => {
+    clearLongPress();
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, textarea')) return;
+    setReflectionVal(task.reflection || '');
+    setIsEditingReflection(true);
   };
 
   return (
@@ -194,32 +253,34 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
       {/* Drag Background Feedback Layers - Placed BEHIND the motion div */}
       <div className="absolute inset-0 z-0 overflow-hidden rounded-sm">
-        {/* Right Drag (Complete) - Green */}
+        {/* Right Drag Feedback */}
         <motion.div 
-            style={{ opacity: bgCompleteOpacity }}
-            className="absolute inset-0 bg-retro-green/20 border border-retro-green"
+            style={{ opacity: completeIndicatorOpacity }}
+            className={rightBgClass}
         />
-        {/* Left Drag (Freeze) - Blue */}
+        {/* Left Drag Feedback */}
         <motion.div 
-            style={{ opacity: bgFreezeOpacity }}
-            className="absolute inset-0 bg-retro-cyan/20 border border-retro-cyan"
+            style={{ opacity: isCompleted ? 0 : bgFreezeOpacity }}
+            className={leftBgClass}
         />
       </div>
 
       {/* Freeze Indicator (Left Drag) */}
       <motion.div 
-        style={{ opacity: freezeIndicatorOpacity }}
+        style={{ opacity: isCompleted ? 0 : freezeIndicatorOpacity }}
         className="absolute right-0 top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
       >
-        <span className="text-retro-cyan font-bold text-xs tracking-widest font-mono text-glow-cyan">[FREEZE_CMD]</span>
+        <span className="font-bold text-xs tracking-widest font-mono text-[#9fe8ff] drop-shadow-[0_0_6px_rgba(159,232,255,0.75)]">[FREEZE_CMD]</span>
       </motion.div>
 
-      {/* Complete Indicator (Right Drag) */}
+      {/* Complete / Chain Indicator (Right Drag) */}
       <motion.div 
         style={{ opacity: completeIndicatorOpacity }}
         className="absolute left-0 top-0 bottom-0 pl-4 flex items-center justify-start pointer-events-none z-0"
       >
-        <span className="text-retro-green font-bold text-xs tracking-widest font-mono text-glow-green">[COMPLETE]</span>
+        <span className={cn("font-bold text-xs tracking-widest font-mono", rightIndicatorColor === 'text-retro-green' ? "text-glow-green" : "")}>
+          <span className={rightIndicatorColor}>{rightIndicatorText}</span>
+        </span>
       </motion.div>
 
       <motion.div
@@ -235,23 +296,32 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         }
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
         transition={{ opacity: { duration: 0.1 }, scale: { duration: shakeProfile.duration }, rotate: { duration: shakeProfile.duration } }}
+        ref={cardRef}
         style={{ x, opacity, touchAction: 'pan-y' }}
-        drag={!isCompleted ? "x" : false}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.5, right: 0.5 }}
+        drag="x"
+        dragConstraints={{ left: isCompleted ? 0 : -200, right: 200 }}
+        dragElastic={{ left: isCompleted ? 0 : 0.5, right: 0.5 }}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onDoubleClick={handleDoubleClick}
+        onDragStart={clearLongPress}
         onDragEnd={(e, info) => { 
           if (info.offset.x < dragFreezeThreshold && !isCompleted) { 
             playFreezeSound(); 
             freezeTask(task.id); 
-          } else if (info.offset.x > dragCompleteThreshold && !isCompleted) {
-             // Swipe Right -> Complete
-             const target = e.target as HTMLElement;
-             const rect = target.getBoundingClientRect();
-             triggerConfetti(rect);
-             playSuccessSound();
-             completeTask(task.id, '🙂');
+          } else if (info.offset.x > dragCompleteThreshold) {
+             if (!isCompleted) {
+               const target = e.target as HTMLElement;
+               const rect = target.getBoundingClientRect();
+               triggerConfetti(rect);
+               playSuccessSound();
+               completeTask(task.id, '🙂');
+             }
              setShowNextInput(true);
           }
+          animate(x, 0, { type: 'spring', stiffness: 380, damping: 32 });
         }}
         className={cn(
           "relative z-10 p-3 border-2 font-mono transition-colors duration-200 overflow-hidden",
@@ -379,11 +449,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
             )}
 
             {isEditingReflection && (
-              <motion.form
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-2 border-l-2 border-retro-green pl-2"
-                  onSubmit={handleReflectionSubmit}
-              >
+            <motion.form
+                ref={reflectionFormRef}
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                className="mt-2 border-l-2 border-retro-green pl-2"
+                onSubmit={handleReflectionSubmit}
+            >
                 <textarea
                     ref={reflectionInputRef}
                     value={reflectionVal}
@@ -402,7 +473,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
 
           {/* Actions: Text Buttons / ASCII Icons */}
           {!isEditingReflection && (
-            <div className="flex flex-col gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <div
+              className={cn(
+                "md:opacity-0 md:group-hover:opacity-100 transition-opacity",
+                isCompleted ? "flex flex-col gap-2" : "grid grid-cols-2 gap-2"
+              )}
+            >
               <button
                 onClick={() => setIsEditingReflection(!isEditingReflection)}
                 className="text-gray-600 hover:text-retro-green p-1.5 rounded-md bg-white/0 md:bg-transparent md:p-0"
