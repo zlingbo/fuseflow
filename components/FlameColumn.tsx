@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Flame, Activity, Download, Cpu } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { motion } from 'framer-motion';
@@ -104,9 +104,7 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
 
   const [hoverDay, setHoverDay] = useState<HeatDay | null>(null);
   const [selectedDay, setSelectedDay] = useState<HeatDay | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isTouch, setIsTouch] = useState(false);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const heatmapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -118,38 +116,18 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
     setIsTouch(touchCapable);
   }, []);
 
-  const setActiveSelection = (day: HeatDay, index: number) => {
+  const setActiveSelection = (day: HeatDay) => {
     setSelectedDay(day);
-    setSelectedIndex(index);
   };
-
-  const handleSwipeMove = useCallback((direction: 'up' | 'down' | 'left' | 'right') => {
-    if (heatDays.length === 0) return;
-    const baseIndex = selectedIndex ?? heatDays.length - 1;
-    const row = baseIndex % 7;
-    const col = Math.floor(baseIndex / 7);
-    let nextIndex = baseIndex;
-
-    if (direction === 'up' && row > 0) nextIndex = baseIndex - 1;
-    if (direction === 'down' && row < 6) nextIndex = baseIndex + 1;
-    if (direction === 'left' && col > 0) nextIndex = baseIndex - 7;
-    if (direction === 'right' && col < heatWeeks.length - 1) nextIndex = baseIndex + 7;
-
-    const nextDay = heatDays[nextIndex];
-    if (nextDay) {
-      setActiveSelection(nextDay, nextIndex);
-    }
-  }, [heatDays, heatWeeks.length, selectedIndex]);
 
   const displayDay = isTouch ? selectedDay : hoverDay ?? selectedDay;
 
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent | TouchEvent) => {
-      if (!selectedDay && selectedIndex === null) return;
+      if (!selectedDay) return;
       const target = e.target as Node | null;
       if (heatmapRef.current && target && heatmapRef.current.contains(target)) return;
       setSelectedDay(null);
-      setSelectedIndex(null);
     };
     document.addEventListener('click', handleGlobalClick, true);
     document.addEventListener('touchstart', handleGlobalClick, true);
@@ -157,44 +135,7 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
       document.removeEventListener('click', handleGlobalClick, true);
       document.removeEventListener('touchstart', handleGlobalClick, true);
     };
-  }, [selectedDay, selectedIndex]);
-
-  useEffect(() => {
-    if (!isTouch) return;
-    const handleTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-    };
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchStartRef.current) return;
-      const touch = e.changedTouches[0];
-      const dx = touch.clientX - touchStartRef.current.x;
-      const dy = touch.clientY - touchStartRef.current.y;
-      touchStartRef.current = null;
-
-      const absX = Math.abs(dx);
-      const absY = Math.abs(dy);
-      const threshold = 24;
-      if (Math.max(absX, absY) < threshold) return;
-
-      if (absX > absY) {
-        handleSwipeMove(dx < 0 ? 'left' : 'right');
-      } else {
-        handleSwipeMove(dy < 0 ? 'up' : 'down');
-      }
-    };
-    const handleTouchCancel = () => {
-      touchStartRef.current = null;
-    };
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd);
-    window.addEventListener('touchcancel', handleTouchCancel);
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('touchcancel', handleTouchCancel);
-    };
-  }, [isTouch, handleSwipeMove]);
+  }, [selectedDay]);
 
   const handleExport = () => {
     try {
@@ -297,15 +238,13 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
           className="mt-4 flex flex-col items-center gap-2"
           onClick={() => {
             setSelectedDay(null);
-            setSelectedIndex(null);
           }}
         >
           <span className="text-[10px] text-retro-dim uppercase tracking-[0.25em]">HEAT MAP</span>
           <div className="flex gap-1">
             {heatWeeks.map((week, wi) => (
               <div key={wi} className="flex flex-col gap-1">
-                {week.map((day, di) => {
-                  const dayIndex = wi * 7 + di;
+                {week.map((day) => {
                   const isActive = displayDay?.ts === day.ts;
                   const baseStyle = getHeatStyle(day.count);
                   const activeStyle = isActive
@@ -327,7 +266,7 @@ export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
                       onMouseLeave={() => setHoverDay(null)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveSelection(day, dayIndex);
+                        setActiveSelection(day);
                       }}
                       title={`${new Date(day.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${day.count}`}
                     />

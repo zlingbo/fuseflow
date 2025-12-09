@@ -122,11 +122,6 @@ export const FlowColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }
             >
               ARCHIVE
             </motion.button>
-            <div className="flex gap-1">
-              <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse"></div>
-              <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-75"></div>
-              <div className="w-1 h-1 bg-retro-amber rounded-full animate-pulse delay-150"></div>
-            </div>
           </div>
         </div>
 
