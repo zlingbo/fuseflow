@@ -9,9 +9,10 @@ import { cn, playSuccessSound, playFreezeSound, playSplitSound, formatDuration }
 interface SparkCardProps {
   task: SparkNode;
   isChild?: boolean;
+  layoutActive?: boolean;
 }
 
-export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) => {
+export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, layoutActive = true }) => {
   const { 
     completeTask, 
     freezeTask, 
@@ -296,7 +297,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
       </motion.div>
 
       <motion.div
-        layout
+        layout={layoutActive}
         initial={isNew ? { opacity: 0 } : false}
         animate={
           isShaking
@@ -309,7 +310,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
         }
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
         transition={{
-          layout: { type: "spring", damping: 25, stiffness: 300 },
+          layout: layoutActive ? { type: "spring", damping: 25, stiffness: 300 } : { duration: 0 },
           opacity: { duration: 0.1 },
           scale: { duration: shakeProfile.duration },
           rotate: { duration: shakeProfile.duration }
@@ -396,7 +397,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                   value={contentVal}
                   onChange={(e) => setContentVal(e.target.value)}
                   onBlur={handleContentSubmit}
-                  className="w-full bg-black text-retro-cyan focus:outline-none font-mono placeholder-retro-dim/50 caret-retro-cyan"
+                  className="w-full bg-black text-retro-cyan focus:outline-none font-mono placeholder-retro-dim/50 caret-retro-cyan select-text"
                   placeholder="INPUT_COMMAND..."
                 />
               </form>
@@ -411,7 +412,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                 style={{ textDecorationThickness: '2px' }}
                 onClick={() => !isCompleted && setIsEditingContent(true)}
                 className={cn(
-                  "text-sm leading-relaxed break-words cursor-text font-bold transition-all",
+                  "text-sm leading-relaxed break-words cursor-text font-bold transition-all select-text",
                   // Add Glitch Effect on Hover for active tasks
                   !isCompleted && "hover:text-retro-cyan glitch-hover",
                   isCompleted && "line-through decoration-2"
@@ -491,7 +492,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                     value={reflectionVal}
                     onChange={(e) => setReflectionVal(e.target.value)}
                     placeholder="// ADD_COMMIT_MSG..."
-                    className="w-full text-xs bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30"
+                    className="w-full text-xs bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30 select-text"
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReflectionSubmit(e); }}}
                 />
                 <div className="flex justify-end gap-2">
@@ -593,7 +594,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
                 value={nextInputVal}
                 onChange={(e) => setNextInputVal(e.target.value)}
                 placeholder="NEXT_ACTION..."
-                className="flex-1 bg-black text-xs text-white focus:outline-none font-mono caret-retro-cyan"
+                  className="flex-1 bg-black text-xs text-white focus:outline-none font-mono caret-retro-cyan select-text"
                 onBlur={() => !nextInputVal && setShowNextInput(false)}
               />
               <motion.button

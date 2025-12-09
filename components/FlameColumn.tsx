@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Flame, Activity, Download, Cpu } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import { cn } from '../utils';
 
 type HeatDay = { ts: number; count: number };
 
-export const FlameColumn: React.FC = () => {
+export const FlameColumn: React.FC<{ isActive?: boolean }> = () => {
   const { tasks } = useSparkStore();
 
   const today = new Date().setHours(0, 0, 0, 0);
@@ -103,6 +103,44 @@ export const FlameColumn: React.FC = () => {
   };
 
   const [hoverDay, setHoverDay] = useState<HeatDay | null>(null);
+  const [selectedDay, setSelectedDay] = useState<HeatDay | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isTouch, setIsTouch] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const touchCapable = typeof window !== 'undefined' && (
+      'ontouchstart' in window ||
+      (navigator as any).maxTouchPoints > 0 ||
+      (navigator as any).msMaxTouchPoints > 0
+    );
+    setIsTouch(touchCapable);
+  }, []);
+
+  const setActiveSelection = (day: HeatDay, index: number) => {
+    setSelectedDay(day);
+    setSelectedIndex(index);
+  };
+
+  const handleSwipeMove = (direction: 'up' | 'down' | 'left' | 'right') => {
+    if (heatDays.length === 0) return;
+    const baseIndex = selectedIndex ?? heatDays.length - 1;
+    const row = baseIndex % 7;
+    const col = Math.floor(baseIndex / 7);
+    let nextIndex = baseIndex;
+
+    if (direction === 'up' && row > 0) nextIndex = baseIndex - 1;
+    if (direction === 'down' && row < 6) nextIndex = baseIndex + 1;
+    if (direction === 'left' && col > 0) nextIndex = baseIndex - 7;
+    if (direction === 'right' && col < heatWeeks.length - 1) nextIndex = baseIndex + 7;
+
+    const nextDay = heatDays[nextIndex];
+    if (nextDay) {
+      setActiveSelection(nextDay, nextIndex);
+    }
+  };
+
+  const displayDay = isTouch ? selectedDay : hoverDay ?? selectedDay;
 
   const handleExport = () => {
     try {
@@ -125,14 +163,14 @@ export const FlameColumn: React.FC = () => {
   return (
     <div className="h-full bg-retro-bg flex flex-col items-center font-mono border-l-2 border-retro-surface relative overflow-hidden">
 
-      <div className="p-4 w-full z-10 border-b-2 border-retro-surface bg-retro-bg flex justify-between items-center">
+      <div className="p-4 w-full z-10 border-b-2 border-retro-surface bg-retro-bg flex justify-between items-center pt-[env(safe-area-inset-top)]">
         <h2 className="text-retro-red text-sm font-bold uppercase tracking-widest flex items-center gap-2">
           <Activity size={16} />
           SYSTEM_HEAT
         </h2>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full gap-4 z-10 p-5 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-center w-full gap-4 z-10 p-5 overflow-y-auto no-scrollbar pb-[env(safe-area-inset-bottom)]">
 
         {/* Pixel Flame Visual */}
         <div className="relative border-4 border-retro-surface bg-black p-3 shadow-hard-sm">
@@ -200,33 +238,71 @@ export const FlameColumn: React.FC = () => {
         </div>
 
         {/* Contribution-style Heat Map */}
-        <div className="mt-4 flex flex-col items-center gap-2">
+        <div
+          className="mt-4 flex flex-col items-center gap-2"
+          onClick={() => {
+            if (isTouch) {
+              setSelectedDay(null);
+              setSelectedIndex(null);
+            }
+          }}
+          onTouchStart={(e) => {
+            if (!isTouch) return;
+            const touch = e.touches[0];
+            touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+          }}
+          onTouchEnd={(e) => {
+            if (!isTouch || !touchStartRef.current) return;
+            const touch = e.changedTouches[0];
+            const dx = touch.clientX - touchStartRef.current.x;
+            const dy = touch.clientY - touchStartRef.current.y;
+            touchStartRef.current = null;
+
+            const absX = Math.abs(dx);
+            const absY = Math.abs(dy);
+            const threshold = 24;
+            if (Math.max(absX, absY) < threshold) return;
+
+            if (absX > absY) {
+              handleSwipeMove(dx < 0 ? 'left' : 'right');
+            } else {
+              handleSwipeMove(dy < 0 ? 'up' : 'down');
+            }
+          }}
+        >
           <span className="text-[10px] text-retro-dim uppercase tracking-[0.25em]">HEAT MAP</span>
           <div className="flex gap-1">
             {heatWeeks.map((week, wi) => (
               <div key={wi} className="flex flex-col gap-1">
-                {week.map((day) => (
-                  <div
-                    key={day.ts}
-                    className={cn(
-                      'w-4 h-4 md:w-3 md:h-3 rounded-[3px] md:rounded-[2px] border transition-all duration-150 bg-transparent',
-                      hoverDay?.ts === day.ts && 'scale-110'
-                    )}
-                    style={getHeatStyle(day.count)}
-                    onMouseEnter={() => setHoverDay(day)}
-                    onMouseLeave={() => setHoverDay(null)}
-                    onClick={() => setHoverDay((prev) => (prev?.ts === day.ts ? null : day))}
-                    title={`${new Date(day.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${day.count}`}
-                  />
-                ))}
+                {week.map((day, di) => {
+                  const dayIndex = wi * 7 + di;
+                  const isActive = displayDay?.ts === day.ts;
+                  return (
+                    <div
+                      key={day.ts}
+                      className={cn(
+                        'w-4 h-4 md:w-3 md:h-3 rounded-[3px] md:rounded-[2px] border transition-all duration-150 bg-transparent',
+                        (hoverDay?.ts === day.ts || isActive) && 'scale-110'
+                      )}
+                      style={getHeatStyle(day.count)}
+                      onMouseEnter={() => setHoverDay(day)}
+                      onMouseLeave={() => setHoverDay(null)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSelection(day, dayIndex);
+                      }}
+                      title={`${new Date(day.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}: ${day.count}`}
+                    />
+                  );
+                })}
               </div>
             ))}
           </div>
           <div className="text-[10px] text-retro-dim uppercase tracking-[0.15em] text-center flex flex-col items-center min-h-[32px]">
-            <div>HOVER_SECTOR_FOR_DATA</div>
-            <div className={cn("mt-1 text-retro-amber", !hoverDay && "opacity-0")}>
-              {hoverDay
-                ? `${new Date(hoverDay.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} : ${hoverDay.count}`
+            <div>{isTouch ? 'TAP_OR_SWIPE_FOR_DATA' : 'HOVER_SECTOR_FOR_DATA'}</div>
+            <div className={cn("mt-1 text-retro-amber", !displayDay && "opacity-0")}>
+              {displayDay
+                ? `${new Date(displayDay.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} : ${displayDay.count}`
                 : "placeholder"}
             </div>
           </div>
@@ -235,7 +311,7 @@ export const FlameColumn: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="w-full p-5 border-t border-retro-surface bg-retro-bg z-10">
+      <div className="w-full p-5 border-t border-retro-surface bg-retro-bg z-10 pb-[env(safe-area-inset-bottom)]">
         <motion.button
           whileTap={{ scale: 0.92 }}
           onClick={handleExport}

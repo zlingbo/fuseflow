@@ -4,7 +4,7 @@ import { Wind, Database } from 'lucide-react';
 import { useSparkStore } from '../store/useSparkStore';
 import { playDeleteSound } from '../utils';
 
-export const FreezerColumn: React.FC = () => {
+export const FreezerColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }) => {
   const { tasks, unfreezeTask, deleteTask } = useSparkStore();
   const frozenTasks = tasks.filter((t) => t.status === 'frozen');
   const touchRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -92,7 +92,7 @@ export const FreezerColumn: React.FC = () => {
 
   return (
     <div className="h-full bg-retro-bg flex flex-col border-r-2 border-retro-surface">
-      <div className="p-4 bg-retro-bg border-b-2 border-retro-surface">
+      <div className="p-4 bg-retro-bg border-b-2 border-retro-surface pt-[env(safe-area-inset-top)] sticky top-[env(safe-area-inset-top)] z-10">
         <h2 className="text-retro-cyan font-bold tracking-widest text-sm flex items-center gap-2 text-glow-cyan">
           <Database size={16} />
           // COLD_STORAGE
@@ -100,7 +100,7 @@ export const FreezerColumn: React.FC = () => {
         <p className="text-gray-600 text-[10px] mt-1 font-mono uppercase">Status: Archiving...</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24 md:pb-10 space-y-3 pt-4">
+      <div className="flex-1 overflow-y-auto px-4 pb-24 md:pb-10 space-y-3 pt-4 no-scrollbar pb-[calc(24px+env(safe-area-inset-bottom))]">
         <AnimatePresence>
           {frozenTasks.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-48 text-gray-700 gap-3 font-mono">
@@ -112,8 +112,8 @@ export const FreezerColumn: React.FC = () => {
               const progress = task.id === swipeId ? Math.min(Math.abs(swipeX) / 120, 1) : 0;
               return (
                 <motion.div
-                  layout
-                  transition={{ layout: { type: "spring", damping: 25, stiffness: 300 } }}
+                  layout={isActive}
+                  transition={isActive ? { layout: { type: "spring", damping: 25, stiffness: 300 } } : { layout: { duration: 0 } }}
                   key={task.id}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   className="group relative p-3 border-2 border-retro-cyan/60 bg-[#071018] overflow-hidden cursor-pointer font-mono shadow-[0_0_12px_rgba(0,255,255,0.2)] hover:shadow-[0_0_18px_rgba(0,255,255,0.35)] transition-all touch-pan-y"

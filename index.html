@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#1f222a" />
   <meta name="application-name" content="FUSE FLOW" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -54,12 +55,26 @@
       --c-cyan: #00ff99;
     }
 
+    html,
     body {
       background-color: var(--c-bg);
       color: var(--c-amber);
       font-family: 'Space Mono', monospace;
       overflow: hidden;
-      /* App handles scrolling */
+      overscroll-behavior-y: none;
+      overscroll-behavior-x: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
     }
 
     /* CRT Effects - Refined for Clarity */

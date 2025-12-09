@@ -47,7 +47,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex h-[100dvh] w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-0 relative selection:bg-retro-amber selection:text-black">
+    <div className="flex h-[100dvh] w-screen bg-retro-bg text-retro-amber font-mono overflow-hidden flex-col md:flex-row pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-0 relative selection:bg-retro-amber selection:text-black select-none pt-[env(safe-area-inset-top)]">
       
       {/* CRT Overlay Effects - Cleaned up */}
       <div className="scanlines" />
@@ -59,7 +59,7 @@ const App: React.FC = () => {
         activeTab === 'freezer' ? 'flex flex-1' : 'hidden',
         "md:flex md:flex-none md:w-80 z-20"
       )}>
-        <FreezerColumn />
+        <FreezerColumn isActive={activeTab === 'freezer'} />
       </aside>
 
       {/* Middle Column: Flow */}
@@ -68,7 +68,7 @@ const App: React.FC = () => {
         activeTab === 'flow' ? 'flex flex-1' : 'hidden',
         "md:flex md:flex-1 md:min-w-0"
       )}>
-        <FlowColumn />
+        <FlowColumn isActive={activeTab === 'flow'} />
       </main>
 
       {/* Right Column: Flame */}
@@ -77,7 +77,7 @@ const App: React.FC = () => {
         activeTab === 'flame' ? 'flex flex-1' : 'hidden',
         "lg:flex lg:flex-none lg:w-80 z-20"
       )}>
-        <FlameColumn />
+        <FlameColumn isActive={activeTab === 'flame'} />
       </aside>
 
       {/* Mobile Navigation (Mechanical Buttons) */}
