@@ -11,6 +11,7 @@ export const FlameColumn: React.FC = () => {
   const completedToday = tasks.filter(
     (t) => t.status === 'completed' && t.completedAt && t.completedAt > today
   ).length;
+  const totalCompleted = tasks.filter((t) => t.status === 'completed').length;
 
   const maxHeat = 8; // Target daily tasks
   const heatPercentage = Math.min((completedToday / maxHeat) * 100, 100);
@@ -61,10 +62,10 @@ export const FlameColumn: React.FC = () => {
         <span className="text-[10px] text-retro-red font-bold animate-pulse">{completedToday} / {maxHeat} UNITS</span>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-start w-full gap-8 z-10 p-6 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-center w-full gap-4 z-10 p-5 overflow-y-auto">
         
         {/* Pixel Flame Visual */}
-        <div className="relative border-4 border-retro-surface bg-black p-4 shadow-hard-sm">
+        <div className="relative border-4 border-retro-surface bg-black p-3 shadow-hard-sm">
              {/* "Screen" Effect */}
              <div className="absolute inset-0 bg-retro-red/10 pointer-events-none" />
              
@@ -85,31 +86,46 @@ export const FlameColumn: React.FC = () => {
              </motion.div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="w-full grid grid-cols-2 gap-2 mt-4">
-           <div className="bg-black border border-gray-800 p-2 flex flex-col items-center justify-center">
-             <span className="text-gray-600 text-[9px] uppercase">Active</span>
-             <span className="text-retro-amber font-bold text-lg">{tasks.filter(t => t.status === 'active').length}</span>
-           </div>
-           <div className="bg-black border border-gray-800 p-2 flex flex-col items-center justify-center">
-             <span className="text-gray-600 text-[9px] uppercase">Frozen</span>
-             <span className="text-retro-cyan font-bold text-lg">{tasks.filter(t => t.status === 'frozen').length}</span>
-           </div>
-        </div>
+        {/* Big Number Display for SPARKLE_COUNT */}
+        <div className="relative flex flex-col items-center gap-1.5 mt-3 px-3 py-2 overflow-hidden text-center">
+           {/* Scanline overlay (lighter for clarity) */}
+           <div className="pointer-events-none absolute inset-0 opacity-40 mix-blend-screen"
+             style={{ backgroundImage: 'repeating-linear-gradient(to bottom, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px, transparent 2px, transparent 5px)' }} />
 
-        <div className="mt-auto w-full pt-6">
-           <button 
-             onClick={handleExport}
-             className="group w-full border-2 border-dashed border-gray-700 hover:border-retro-red p-3 flex items-center justify-center gap-2 text-gray-500 hover:text-retro-red transition-all hover:bg-retro-red/5"
+           <motion.div
+             className="text-[clamp(44px,6vw,60px)] font-extrabold tracking-tight leading-none drop-shadow-[0_0_14px_rgba(255,255,255,0.5)]"
+             style={{
+               backgroundImage: 'linear-gradient(90deg, #ff6b6b, #fbbf24, #34d399, #38bdf8, #a855f7, #f43f5e, #ff6b6b)',
+               backgroundSize: '300% 300%',
+               WebkitBackgroundClip: 'text',
+               backgroundClip: 'text',
+               color: 'transparent',
+             }}
+             animate={{ backgroundPositionX: ['0%', '100%', '0%'] }}
+             transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
            >
-             <Download size={16} />
-             <span className="text-xs font-bold uppercase tracking-widest group-hover:animate-pulse">DUMP_MEMORY</span>
-           </button>
-           <p className="text-[9px] text-gray-800 text-center mt-2 uppercase font-mono">
-             v1.0.4 // SPARK_OS
-           </p>
+             {totalCompleted.toString().padStart(2, '0')}
+           </motion.div>
+           <div className="w-14 border-t border-retro-dim/60" />
+           <div className="text-[10px] text-retro-dim uppercase tracking-[0.25em] drop-shadow-[0_0_6px_rgba(255,72,72,0.35)]">
+             SPARKLE_COUNT
+           </div>
         </div>
 
+      </div>
+      
+      {/* Footer */}
+      <div className="w-full p-5 border-t border-retro-surface bg-retro-bg z-10">
+        <button 
+          onClick={handleExport}
+          className="group w-full border-2 border-dashed border-gray-700 hover:border-retro-red p-3 flex items-center justify-center gap-2 text-gray-500 hover:text-retro-red transition-all hover:bg-retro-red/5"
+        >
+          <Download size={16} />
+          <span className="text-xs font-bold uppercase tracking-widest group-hover:animate-pulse">DUMP_MEMORY</span>
+        </button>
+        <p className="text-[9px] text-gray-800 text-center mt-2 uppercase font-mono">
+          v1.0.4 // SPARK_OS
+        </p>
       </div>
     </div>
   );
