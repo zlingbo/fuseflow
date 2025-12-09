@@ -84,7 +84,7 @@ const App: React.FC = () => {
       {!isMobileInputOpen && (
         <div
           className="md:hidden fixed bottom-0 left-0 right-0 bg-retro-bg border-t-2 border-retro-amber flex items-center z-50 px-2 gap-2"
-          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))', height: '92px' }}
+          style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))', height: '96px' }}
         >
           <motion.button 
             whileTap={{ scale: 0.92 }}

@@ -107,7 +107,7 @@ export const FlowColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }
         {activePopoverId && <div className="fixed inset-0 z-45 bg-transparent" />}
 
         {/* Header - Fixed Flex Item */}
-        <div className="flex-none p-4 bg-retro-bg z-40 border-b-2 border-retro-surface flex justify-between items-center sticky top-[env(safe-area-inset-top)] pt-[env(safe-area-inset-top)]">
+        <div className="flex-none p-4 bg-retro-bg z-40 border-b-2 border-retro-surface flex justify-between items-center sticky top-[env(safe-area-inset-top)] pt-[calc(env(safe-area-inset-top)+10px)]">
           <h2 className="text-retro-amber font-bold text-sm tracking-widest flex items-center gap-2 text-glow">
             <Zap size={16} />
             &gt;_ EXECUTION_LOG

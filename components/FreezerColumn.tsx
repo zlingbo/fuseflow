@@ -92,7 +92,7 @@ export const FreezerColumn: React.FC<{ isActive?: boolean }> = ({ isActive = tru
 
   return (
     <div className="h-full bg-retro-bg flex flex-col border-r-2 border-retro-surface">
-      <div className="p-4 bg-retro-bg border-b-2 border-retro-surface pt-[env(safe-area-inset-top)] sticky top-[env(safe-area-inset-top)] z-10">
+      <div className="p-4 bg-retro-bg border-b-2 border-retro-surface pt-[calc(env(safe-area-inset-top)+10px)] sticky top-[env(safe-area-inset-top)] z-10">
         <h2 className="text-retro-cyan font-bold tracking-widest text-sm flex items-center gap-2 text-glow-cyan">
           <Database size={16} />
           // COLD_STORAGE

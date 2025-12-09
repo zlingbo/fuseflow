@@ -44,6 +44,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
   const popoverRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const reflectionFormRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef<number | null>(null);
   const completeFlashTimer = useRef<number | null>(null);
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
@@ -257,6 +258,25 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
     setIsEditingReflection(true);
   };
 
+  const handleTapOrClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, textarea')) return;
+    const now = Date.now();
+    if (lastTapRef.current && now - lastTapRef.current < 350) {
+      setReflectionVal(task.reflection || '');
+      setIsEditingReflection(true);
+      lastTapRef.current = null;
+      return;
+    }
+    lastTapRef.current = now;
+  };
+
+  useEffect(() => {
+    if (showNextInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showNextInput]);
+
   return (
     <div className="relative group pl-1">
       {/* Connector Line (Dotted Circuit) */}
@@ -325,6 +345,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
         onPointerCancel={handlePointerUp}
         onPointerLeave={handlePointerUp}
         onDoubleClick={handleDoubleClick}
+        onClick={handleTapOrClick}
         onDragStart={clearLongPress}
         onDragEnd={(e, info) => { 
           const shouldFreeze = !isCompleted && (info.offset.x < dragFreezeThreshold || info.velocity.x < velocityFreezeThreshold);
@@ -475,7 +496,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
 
             {/* Reflection: Code Comment Style */}
             {(task.reflection && !isEditingReflection) && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2 text-base text-retro-green/80 font-mono text-glow-green">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-2 text-base text-retro-green/80 font-mono text-glow-green cursor-text"
+                onClick={() => { setReflectionVal(task.reflection || ''); setIsEditingReflection(true); }}
+              >
                 <span className="opacity-50 mr-1">//</span>{task.reflection}
               </motion.div>
             )}
