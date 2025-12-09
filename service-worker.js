@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `spark-cache-${CACHE_VERSION}`;
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon.png'];
 const RUNTIME_CACHE_ORIGINS = [
@@ -42,14 +42,18 @@ self.addEventListener('fetch', (event) => {
 async function handleNavigation(request) {
   try {
     const networkResponse = await fetch(request);
-    const cache = await caches.open(CACHE_NAME);
-    cache.put('/index.html', networkResponse.clone());
-    return networkResponse;
+    if (networkResponse && networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put('/index.html', networkResponse.clone());
+      return networkResponse;
+    }
   } catch (err) {
-    const cachedIndex = await caches.match('/index.html');
-    if (cachedIndex) return cachedIndex;
-    return new Response('offline', { status: 503, statusText: 'Offline' });
   }
+
+  // Fallback to cached shell when network fails or returns non-OK
+  const cachedIndex = await caches.match('/index.html');
+  if (cachedIndex) return cachedIndex;
+  return new Response('offline', { status: 503, statusText: 'Offline' });
 }
 
 async function staleWhileRevalidate(request) {

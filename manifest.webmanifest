@@ -1,7 +1,8 @@
 {
   "name": "FUSE FLOW",
   "short_name": "Fuse",
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1f222a",
   "theme_color": "#1f222a",
