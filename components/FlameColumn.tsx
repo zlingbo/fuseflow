@@ -86,31 +86,52 @@ export const FlameColumn: React.FC = () => {
              </motion.div>
         </div>
 
-        {/* Big Number Display for SPARKLE_COUNT */}
-        <div className="relative flex flex-col items-center gap-1.5 mt-3 px-3 py-2 overflow-hidden text-center">
-           {/* Scanline overlay (lighter for clarity) */}
-           <div className="pointer-events-none absolute inset-0 opacity-40 mix-blend-screen"
-             style={{ backgroundImage: 'repeating-linear-gradient(to bottom, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px, transparent 2px, transparent 5px)' }} />
+         {/* Big Number Display for SPARKLE_COUNT */}
+         <div className="relative flex flex-col items-center gap-1.5 mt-3 px-3 py-2 overflow-hidden text-center">
+            {/* Scanline overlay (lighter for clarity) */}
+            <div className="pointer-events-none absolute inset-0 opacity-35 mix-blend-screen"
+              style={{ backgroundImage: 'repeating-linear-gradient(to bottom, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 2px, transparent 2px, transparent 5px)' }} />
+ 
+            {/* Prism/Sparkle layers - Pure white base with intense RGB split edges */}
+            <div className="relative inline-block leading-none text-[clamp(44px,6vw,60px)] font-extrabold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+              {/* Cyan/Blue Shift */}
+              <motion.span
+                className="absolute inset-0 text-cyan-400 mix-blend-screen select-none"
+                animate={{ x: [-2, 2, -1], opacity: [0.6, 0.8, 0.5] }}
+                transition={{ duration: 2.5, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+              >
+                {totalCompleted.toString().padStart(2, '0')}
+              </motion.span>
+              
+              {/* Magenta/Pink Shift */}
+              <motion.span
+                className="absolute inset-0 text-fuchsia-500 mix-blend-screen select-none"
+                animate={{ x: [2, -2, 1], opacity: [0.6, 0.8, 0.5] }}
+                transition={{ duration: 3, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+              >
+                {totalCompleted.toString().padStart(2, '0')}
+              </motion.span>
 
-           <motion.div
-             className="text-[clamp(44px,6vw,60px)] font-extrabold tracking-tight leading-none drop-shadow-[0_0_14px_rgba(255,255,255,0.5)]"
-             style={{
-               backgroundImage: 'linear-gradient(90deg, #ff6b6b, #fbbf24, #34d399, #38bdf8, #a855f7, #f43f5e, #ff6b6b)',
-               backgroundSize: '300% 300%',
-               WebkitBackgroundClip: 'text',
-               backgroundClip: 'text',
-               color: 'transparent',
-             }}
-             animate={{ backgroundPositionX: ['0%', '100%', '0%'] }}
-             transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-           >
-             {totalCompleted.toString().padStart(2, '0')}
-           </motion.div>
-           <div className="w-14 border-t border-retro-dim/60" />
-           <div className="text-[10px] text-retro-dim uppercase tracking-[0.25em] drop-shadow-[0_0_6px_rgba(255,72,72,0.35)]">
-             SPARKLE_COUNT
-           </div>
-        </div>
+              {/* Yellow/Gold Shift (Vertical) */}
+              <motion.span
+                className="absolute inset-0 text-yellow-300 mix-blend-screen select-none"
+                animate={{ y: [-1, 1.5, -0.5], opacity: [0.5, 0.7, 0.4] }}
+                transition={{ duration: 4, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+              >
+                {totalCompleted.toString().padStart(2, '0')}
+              </motion.span>
+
+              {/* Base White Text */}
+              <span className="relative text-white z-10">
+                {totalCompleted.toString().padStart(2, '0')}
+              </span>
+            </div>
+ 
+            <div className="w-14 border-t border-retro-dim/60" />
+            <div className="text-[10px] text-retro-dim uppercase tracking-[0.25em] drop-shadow-[0_0_6px_rgba(255,72,72,0.35)]">
+              SPARKLE_COUNT
+            </div>
+         </div>
 
       </div>
       
