@@ -254,14 +254,35 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false }) =
           }
         }}
         className={cn(
-          "relative z-10 p-3 border-2 font-mono transition-colors duration-200",
+          "relative z-10 p-3 border-2 font-mono transition-colors duration-200 overflow-hidden",
           // Retro Card Styling: Hard edges, box shadow, colors
           isCompleted
             ? "bg-retro-surface border-gray-700 text-gray-500"
-            : "bg-black border-retro-amber text-retro-amber shadow-[4px_4px_0px_0px_#996900] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_#996900]"
+            : "bg-gradient-to-br from-[#111726] via-[#0f1926] to-[#0b121d] border-retro-amber/80 text-retro-amber shadow-[4px_4px_0px_0px_#8c5f00] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_#8c5f00]"
         )}
       >
-        <div className="flex items-start gap-3">
+        {!isCompleted && (
+          <>
+            <div
+              className="pointer-events-none absolute inset-0 opacity-65 mix-blend-screen"
+              style={{
+                backgroundImage:
+                  'radial-gradient(circle at 18% 12%, rgba(255,176,0,0.08), transparent 40%), radial-gradient(circle at 82% 10%, rgba(0,255,153,0.08), transparent 42%), radial-gradient(circle at 48% 88%, rgba(255,255,255,0.05), transparent 46%)'
+              }}
+            />
+            <div
+              className="pointer-events-none absolute inset-0 opacity-15"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px)',
+                backgroundSize: '22px 22px',
+                mixBlendMode: 'soft-light'
+              }}
+            />
+          </>
+        )}
+
+        <div className="relative z-10 flex items-start gap-3">
           {/* ASCII Checkbox */}
           <button
             onClick={handleComplete}
