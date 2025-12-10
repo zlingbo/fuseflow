@@ -67,7 +67,7 @@ const TaskChain: React.FC<{ task: SparkNode; allTasks: SparkNode[]; depth?: numb
 };
 
 export const FlowColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }) => {
-  const { tasks, addTask, archiveCompleted, activePopoverId, isMobileInputOpen, setMobileInputOpen } = useSparkStore();
+  const { tasks, addTask, activePopoverId, isMobileInputOpen, setMobileInputOpen } = useSparkStore();
   const [inputValue, setInputValue] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +77,7 @@ export const FlowColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }
     prevActiveRef.current = isActive;
   }, [isActive]);
 
-  const visibleTasks = tasks.filter(t => !t.archived);
+  const visibleTasks = tasks.filter(t => t.status !== 'frozen');
 
   const rootTasks = visibleTasks
     .filter(t => t.status !== 'frozen')
@@ -112,17 +112,6 @@ export const FlowColumn: React.FC<{ isActive?: boolean }> = ({ isActive = true }
             <Zap size={16} />
             &gt;_ EXECUTION_LOG
           </h2>
-          <div className="flex items-center gap-3">
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.92 }}
-              onClick={archiveCompleted}
-              className="text-xs md:text-[10px] uppercase tracking-widest text-retro-amber transition-colors border border-retro-amber/50 px-3 py-2 md:px-2 md:py-1 rounded md:rounded-sm active:bg-zinc-800 focus-visible:outline-none focus-visible:ring-0"
-              title="Archive completed tasks (kept for dump)"
-            >
-              ARCHIVE
-            </motion.button>
-          </div>
         </div>
 
         {/* Task Stream - Scrollable Flex Item */}

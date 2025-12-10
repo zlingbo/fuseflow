@@ -97,7 +97,7 @@ export const FreezerColumn: React.FC<{ isActive?: boolean }> = ({ isActive = tru
           <Database size={16} />
           // COLD_STORAGE
         </h2>
-        <p className="text-gray-600 text-[10px] mt-1 font-mono uppercase">Status: Archiving...</p>
+        <p className="text-gray-600 text-[10px] mt-1 font-mono uppercase">Status: Frozen Tasks</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-24 md:pb-10 space-y-3 pt-4 no-scrollbar pb-[calc(24px+env(safe-area-inset-bottom))]">
@@ -155,7 +155,7 @@ export const FreezerColumn: React.FC<{ isActive?: boolean }> = ({ isActive = tru
                       {task.content}
                     </p>
                   </div>
-                  
+
                   <div className="mt-2 flex justify-between items-end border-t border-cyan-900/50 pt-2 text-[9px] relative z-10">
                      <span className="text-gray-500">ID: {task.id.slice(0,4)}</span>
                      <span className="px-1 text-cyan-200 bg-cyan-900/40 border border-cyan-500/40 rounded-sm tracking-[0.08em]">

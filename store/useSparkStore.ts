@@ -16,8 +16,7 @@ export const useSparkStore = create<SparkState>()(
           content,
           status: 'active',
           parentId: parentId || null,
-          createdAt: Date.now(),
-          archived: false,
+          createdAt: Date.now()
         };
         set((state) => ({
           tasks: [...state.tasks, newTask],
@@ -30,14 +29,6 @@ export const useSparkStore = create<SparkState>()(
             task.id === id
               ? { ...task, status: 'completed', completedAt: Date.now(), feeling }
               : task
-          ),
-        }));
-      },
-
-      archiveCompleted: () => {
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.status === 'completed' ? { ...task, archived: true } : task
           ),
         }));
       },
@@ -92,7 +83,7 @@ export const useSparkStore = create<SparkState>()(
         set((state) => {
           // New Logic: Just add a child task. Do NOT re-parent the current task.
           // This prevents the visual jumping of the parent task.
-          
+
           const newTask: SparkNode = {
             id: generateId(),
             content: '', // Empty content triggers edit mode in UI

@@ -13,14 +13,14 @@ interface SparkCardProps {
 }
 
 export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, layoutActive = true }) => {
-  const { 
-    completeTask, 
-    freezeTask, 
-    deleteTask, 
-    addTask, 
-    updateTaskReflection, 
-    splitTask, 
-    updateTaskContent, 
+  const {
+    completeTask,
+    freezeTask,
+    deleteTask,
+    addTask,
+    updateTaskReflection,
+    splitTask,
+    updateTaskContent,
     updateTaskFeeling,
     activePopoverId,
     setActivePopoverId
@@ -46,13 +46,14 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
   const reflectionFormRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef<number | null>(null);
   const completeFlashTimer = useRef<number | null>(null);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const isNew = useRef(Date.now() - task.createdAt < 1000).current;
   const isCompleted = task.status === 'completed';
   const dragCompleteThreshold = 60;
-  const dragFreezeThreshold = -60;
+  const dragFreezeThreshold = -90;
   const velocityCompleteThreshold = 500;
-  const velocityFreezeThreshold = -500;
+  const velocityFreezeThreshold = -700;
   const shakeTimer = useRef<number | null>(null);
   const longPressTimer = useRef<number | null>(null);
   const LONG_PRESS_MS = 550;
@@ -77,13 +78,13 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
   // Drag logic
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, -100, 0], [0, 1, 1]);
-  
+
   // Dynamic Background Colors based on Drag
   const bgFreezeOpacity = useTransform(x, [-150, -50], [1, 0]);
 
   // Freeze appears on left drag (negative x)
   const freezeIndicatorOpacity = useTransform(x, [-150, -50], [1, 0]);
-  
+
   // Complete appears on right drag (positive x)
   const completeIndicatorOpacity = useTransform(x, [50, 150], [0, 1]);
 
@@ -204,14 +205,14 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
     updateTaskReflection(task.id, reflectionVal);
     setIsEditingReflection(false);
   };
-  
+
   const handleContentSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (contentVal.trim()) {
       updateTaskContent(task.id, contentVal);
       setIsEditingContent(false);
     } else {
-      if (!task.content) { deleteTask(task.id); } 
+      if (!task.content) { deleteTask(task.id); }
       else { setContentVal(task.content); setIsEditingContent(false); }
     }
   };
@@ -287,19 +288,19 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
       {/* Drag Background Feedback Layers - Placed BEHIND the motion div */}
       <div className="absolute inset-0 z-0 overflow-hidden rounded-sm">
         {/* Right Drag Feedback */}
-        <motion.div 
+        <motion.div
             style={{ opacity: completeIndicatorOpacity }}
             className={rightBgClass}
         />
         {/* Left Drag Feedback */}
-        <motion.div 
+        <motion.div
             style={{ opacity: isCompleted ? 0 : bgFreezeOpacity }}
             className={leftBgClass}
         />
       </div>
 
       {/* Freeze Indicator (Left Drag) */}
-      <motion.div 
+      <motion.div
         style={{ opacity: isCompleted ? 0 : freezeIndicatorOpacity }}
         className="absolute right-0 top-0 bottom-0 pr-4 flex items-center justify-end pointer-events-none z-0"
       >
@@ -307,7 +308,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
       </motion.div>
 
       {/* Complete / Chain Indicator (Right Drag) */}
-      <motion.div 
+      <motion.div
         style={{ opacity: completeIndicatorOpacity }}
         className="absolute left-0 top-0 bottom-0 pl-4 flex items-center justify-start pointer-events-none z-0"
       >
@@ -321,7 +322,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
         initial={isNew ? { opacity: 0 } : false}
         animate={
           isShaking
-            ? { 
+            ? {
                 opacity: 1,
                 scale: [1, 1 + shakeProfile.scaleAmp, 1, 1 + shakeProfile.scaleAmp * 0.6, 1],
                 rotate: [0, -shakeProfile.rotAmp, shakeProfile.rotAmp * 0.8, -shakeProfile.rotAmp * 0.6, 0]
@@ -346,13 +347,21 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
         onPointerLeave={handlePointerUp}
         onDoubleClick={handleDoubleClick}
         onClick={handleTapOrClick}
-        onDragStart={clearLongPress}
-        onDragEnd={(e, info) => { 
-          const shouldFreeze = !isCompleted && (info.offset.x < dragFreezeThreshold || info.velocity.x < velocityFreezeThreshold);
-          const shouldComplete = info.offset.x > dragCompleteThreshold || info.velocity.x > velocityCompleteThreshold;
-          if (shouldFreeze) { 
-            playFreezeSound(); 
-            freezeTask(task.id); 
+        onDragStart={(e, info) => {
+          clearLongPress();
+          dragStartRef.current = { x: info.point.x, y: info.point.y };
+        }}
+        onDragEnd={(e, info) => {
+          const start = dragStartRef.current;
+          const dx = start ? info.point.x - start.x : info.offset.x;
+          const dy = start ? info.point.y - start.y : 0;
+          dragStartRef.current = null;
+          const horizontalDominant = Math.abs(dx) > Math.abs(dy) * 1.2;
+          const shouldFreeze = !isCompleted && horizontalDominant && (dx < dragFreezeThreshold || info.velocity.x < velocityFreezeThreshold);
+          const shouldComplete = horizontalDominant && (dx > dragCompleteThreshold || info.velocity.x > velocityCompleteThreshold);
+          if (shouldFreeze) {
+            playFreezeSound();
+            freezeTask(task.id);
           } else if (shouldComplete) {
             if (!isCompleted) {
               const target = e.target as HTMLElement;
@@ -442,12 +451,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
                 {task.content}
               </motion.p>
             )}
-            
+
             {/* Tech Metadata */}
             <div className="mt-2 flex items-center gap-2 text-[10px] tracking-widest opacity-80 select-none flex-wrap uppercase">
               <span className="text-gray-500">T_STAMP:</span>
               <span>{new Date(task.createdAt).toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'})}</span>
-              
+
               {isCompleted && task.completedAt && (
                 <>
                   <span className="text-gray-600">»</span>
@@ -460,7 +469,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
 
               {isCompleted && (
                 <div className="relative inline-block ml-auto">
-                  <motion.button 
+                  <motion.button
                     whileTap={{ scale: 0.92 }}
                     onClick={(e) => { e.stopPropagation(); setActivePopoverId(showFeelingSelector ? null : task.id); }}
                     className={cn(
@@ -469,10 +478,10 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
                   >
                       MOOD: {task.feeling || '🙂'}
                   </motion.button>
-                  
+
                   <AnimatePresence>
                     {showFeelingSelector && (
-                      <motion.div 
+                      <motion.div
                         ref={popoverRef}
                         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
                         className="absolute bottom-full right-0 mb-1 bg-black border-2 border-retro-cyan shadow-[4px_4px_0_0_rgba(0,255,153,0.3)] p-1 flex gap-1 z-50 min-w-max"
