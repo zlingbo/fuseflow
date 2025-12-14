@@ -43,7 +43,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
   const contentInputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const reflectionFormRef = useRef<HTMLDivElement>(null);
+  const reflectionFormRef = useRef<HTMLFormElement>(null);
   const lastTapRef = useRef<number | null>(null);
   const completeFlashTimer = useRef<number | null>(null);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -289,13 +289,13 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
       <div className="absolute inset-0 z-0 overflow-hidden rounded-sm">
         {/* Right Drag Feedback */}
         <motion.div
-            style={{ opacity: completeIndicatorOpacity }}
-            className={rightBgClass}
+          style={{ opacity: completeIndicatorOpacity }}
+          className={rightBgClass}
         />
         {/* Left Drag Feedback */}
         <motion.div
-            style={{ opacity: isCompleted ? 0 : bgFreezeOpacity }}
-            className={leftBgClass}
+          style={{ opacity: isCompleted ? 0 : bgFreezeOpacity }}
+          className={leftBgClass}
         />
       </div>
 
@@ -323,10 +323,10 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
         animate={
           isShaking
             ? {
-                opacity: 1,
-                scale: [1, 1 + shakeProfile.scaleAmp, 1, 1 + shakeProfile.scaleAmp * 0.6, 1],
-                rotate: [0, -shakeProfile.rotAmp, shakeProfile.rotAmp * 0.8, -shakeProfile.rotAmp * 0.6, 0]
-              }
+              opacity: 1,
+              scale: [1, 1 + shakeProfile.scaleAmp, 1, 1 + shakeProfile.scaleAmp * 0.6, 1],
+              rotate: [0, -shakeProfile.rotAmp, shakeProfile.rotAmp * 0.8, -shakeProfile.rotAmp * 0.6, 0]
+            }
             : { opacity: 1, scale: 1, rotate: 0 }
         }
         exit={{ opacity: 0, transition: { duration: 0.1 } }}
@@ -421,7 +421,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
           <div className="flex-1 min-w-0">
             {isEditingContent ? (
               <form onSubmit={handleContentSubmit} className="flex items-center">
-                 <span className="text-retro-amber mr-1 blink">&gt;</span>
+                <span className="text-retro-amber mr-1 blink">&gt;</span>
                 <input
                   ref={contentInputRef}
                   value={contentVal}
@@ -455,12 +455,12 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
             {/* Tech Metadata */}
             <div className="mt-2 flex items-center gap-2 text-[10px] tracking-widest opacity-80 select-none flex-wrap uppercase">
               <span className="text-gray-500">T_STAMP:</span>
-              <span>{new Date(task.createdAt).toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'})}</span>
+              <span>{new Date(task.createdAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}</span>
 
               {isCompleted && task.completedAt && (
                 <>
                   <span className="text-gray-600">»</span>
-                  <span className="text-retro-cyan">DONE: {new Date(task.completedAt).toLocaleTimeString([], {hour12: false, hour: '2-digit', minute:'2-digit'})}</span>
+                  <span className="text-retro-cyan">DONE: {new Date(task.completedAt).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}</span>
                   <span className="border border-gray-700 px-1 text-gray-400">
                     {formatDuration(task.completedAt - task.createdAt)}
                   </span>
@@ -476,7 +476,7 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
                       "hover:text-retro-cyan hover:underline transition-colors grayscale-[0.5] hover:grayscale-0",
                     )}
                   >
-                      MOOD: {task.feeling || '🙂'}
+                    MOOD: {task.feeling || '🙂'}
                   </motion.button>
 
                   <AnimatePresence>
@@ -516,19 +516,19 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
             )}
 
             {isEditingReflection && (
-            <motion.form
+              <motion.form
                 ref={reflectionFormRef}
                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                 className="mt-2 border-l-2 border-retro-green pl-2"
                 onSubmit={handleReflectionSubmit}
-            >
+              >
                 <textarea
-                    ref={reflectionInputRef}
-                    value={reflectionVal}
-                    onChange={(e) => setReflectionVal(e.target.value)}
-                    placeholder="// ADD_COMMIT_MSG..."
-                    className="w-full text-base bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30 select-text"
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReflectionSubmit(e); }}}
+                  ref={reflectionInputRef}
+                  value={reflectionVal}
+                  onChange={(e) => setReflectionVal(e.target.value)}
+                  placeholder="// ADD_COMMIT_MSG..."
+                  className="w-full text-base bg-black text-retro-green focus:outline-none resize-none min-h-[40px] font-mono placeholder-retro-green/30 select-text"
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReflectionSubmit(e); } }}
                 />
                 <div className="flex justify-end gap-2">
                   <motion.button
@@ -617,19 +617,19 @@ export const SparkCard: React.FC<SparkCardProps> = ({ task, isChild = false, lay
         {/* Next Step CLI Input */}
         <AnimatePresence>
           {showNextInput && (
-              <motion.form
+            <motion.form
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
               onSubmit={handleNextInputSubmit}
-                className="mt-2 border-t border-dashed border-gray-800 pt-2 flex items-center gap-2"
+              className="mt-2 border-t border-dashed border-gray-800 pt-2 flex items-center gap-2"
             >
-                <span className="text-retro-cyan text-base leading-tight">GO_TO &gt;</span>
+              <span className="text-retro-cyan text-base leading-tight">GO_TO &gt;</span>
               <input
                 ref={inputRef}
                 type="text"
                 value={nextInputVal}
                 onChange={(e) => setNextInputVal(e.target.value)}
                 placeholder="NEXT_ACTION..."
-                  className="flex-1 bg-black text-base text-white focus:outline-none font-mono caret-retro-cyan select-text"
+                className="flex-1 bg-black text-base text-white focus:outline-none font-mono caret-retro-cyan select-text"
                 onBlur={() => !nextInputVal && setShowNextInput(false)}
               />
               <motion.button

@@ -84,3 +84,5 @@ async function staleWhileRevalidate(request) {
   return new Response('offline', { status: 503, statusText: 'Offline' });
 }
 
+
+
